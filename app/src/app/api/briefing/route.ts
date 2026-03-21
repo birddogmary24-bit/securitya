@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
     // If no API key, use fallback
     if (!apiKey) {
       const briefing = generateFallbackBriefing(portfolio);
+      briefing.macroAlert = "[디버그] GEMINI_API_KEY 환경변수를 찾을 수 없음";
       return Response.json(briefing);
     }
 
