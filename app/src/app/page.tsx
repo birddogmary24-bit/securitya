@@ -128,10 +128,18 @@ export default function HomePage() {
                   ? "bg-blue-100 text-blue-600"
                   : "bg-gray-100 text-gray-400"
               }`}>
-                {briefing.source === "gemini" ? "✦ Gemini AI" : "Mock 데이터"}
+                {briefing.source === "gemini" ? "✦ Gemini AI" : "⚠ Mock 데이터"}
               </span>
             )}
           </div>
+
+          {/* Generated time + data source */}
+          {briefing && (
+            <div className="text-[11px] text-gray-400 space-y-0.5">
+              <p>🕐 생성 시각: {briefing.generatedAt} KST</p>
+              <p>📂 데이터 출처: {briefing.source === "gemini" ? "Gemini 1.5 Flash (AI 분석) · Mock 주가/뉴스" : "Mock 데이터 (실시간 미연동)"}</p>
+            </div>
+          )}
 
           {loading ? (
             <div className="text-center">

@@ -2,6 +2,18 @@ import { NextRequest } from "next/server";
 import { StockHolding, BriefingCard, DailyBriefing } from "@/lib/types";
 import { MOCK_QUOTES, MOCK_NEWS } from "@/lib/mock-data";
 
+function getKSTString(): string {
+  return new Date().toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 function generateFallbackBriefing(portfolio: StockHolding[]): DailyBriefing {
   const tickers = portfolio.map((h) => h.ticker);
 
@@ -62,6 +74,7 @@ function generateFallbackBriefing(portfolio: StockHolding[]): DailyBriefing {
 
   return {
     date: new Date().toISOString().split("T")[0],
+    generatedAt: getKSTString(),
     greeting: "좋은 아침이에요! 밤사이 미국 시장 소식을 정리했어요.",
     marketOverview: "나스닥은 AI 반도체주 강세에 상승 마감했으나, FOMC 의사록 공개를 앞두고 변동성이 확대될 수 있습니다.",
     cards,
@@ -167,6 +180,7 @@ ${newsInfo}
 
       const briefing: DailyBriefing = {
         date: new Date().toISOString().split("T")[0],
+        generatedAt: getKSTString(),
         greeting: briefingData.greeting,
         marketOverview: briefingData.marketOverview,
         cards,

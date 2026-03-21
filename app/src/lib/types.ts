@@ -37,6 +37,7 @@ export interface BriefingCard {
 
 export interface DailyBriefing {
   date: string;
+  generatedAt: string; // KST ISO string
   greeting: string;
   marketOverview: string;
   cards: BriefingCard[];
