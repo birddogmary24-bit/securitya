@@ -52,6 +52,66 @@ kakaopaysecurity/
 
 ### 다음 세션 시작 전 확인 사항
 
-- [ ] Phase 1 개발 시작: Next.js 프로젝트 셋업 (`app/` 디렉토리)
-- [ ] 환경 변수 설정 (`.env.local`)
-- [ ] Supabase DB 연결
+- [x] Phase 1 개발 시작: Next.js 프로젝트 셋업 (`app/` 디렉토리) ← 2차 세션 완료
+- [x] 환경 변수 설정 ← Vercel 환경변수로 관리
+- [x] Supabase DB 연결 ← 2차 세션 완료
+
+---
+
+## 2026-03-21 | 2차 세션 — 프로토타입 개발, GitHub/Vercel 배포, Supabase DB 파이프라인 구축
+
+### 작업 요약
+Next.js 프로토타입 개발 완료. 전체 문서 익명화(A증권사). GitHub 퍼블릭 레포 생성 및 Vercel CI/CD 연동. AI를 Gemini 1.5 Flash로 결정. Supabase DB + Cron 파이프라인 구조 구축.
+
+### 주요 작업
+
+| # | 작업 | 내용 |
+|---|------|------|
+| 1 | 익명화 | 전체 문서/코드에서 회사명 → A증권사 처리 |
+| 2 | GitHub 배포 | `birddogmary24-bit/securitya` 퍼블릭 레포 생성, 초기 커밋 |
+| 3 | Vercel CI/CD | GitHub 연동 → `main` push 시 자동 배포. URL: `securitya.vercel.app` |
+| 4 | AI 모델 결정 | Claude API → **Gemini 1.5 Flash** 로 변경 (`@google/generative-ai`) |
+| 5 | Supabase 연동 | `stock_quotes`, `stock_news` 테이블 설계 및 생성 |
+| 6 | Cron 파이프라인 | `/api/cron/collect-data` 엔드포인트 구현 (mock → DB 저장) |
+| 7 | 브리핑 API 개선 | Supabase DB 우선 조회 → fallback mock 구조로 개선 |
+| 8 | UI 개선 | AI/Mock 뱃지, KST 생성 시각, 데이터 출처 표기 추가 |
+| 9 | Vercel Cron | `vercel.json` — 매일 06:00 KST 자동 데이터 수집 스케줄 |
+
+### 배포 현황
+
+| 항목 | 내용 |
+|------|------|
+| GitHub | `github.com/birddogmary24-bit/securitya` |
+| Vercel URL | `https://securitya.vercel.app` |
+| CI/CD | GitHub `main` push → Vercel 자동 배포 |
+| AI | Gemini 1.5 Flash (Google AI Studio) |
+| DB | Supabase — `stock_quotes`, `stock_news` 테이블 운영 중 |
+| Cron | 매일 21:00 UTC (06:00 KST) 자동 실행 |
+
+### 환경변수 (Vercel Production)
+
+| Key | 용도 |
+|-----|------|
+| `GEMINI_API_KEY` | Gemini 1.5 Flash |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase 서버 사이드 접근 |
+| `CRON_SECRET` | Cron 엔드포인트 인증 |
+
+### 현재 아키텍처
+
+```
+[Vercel Cron - 매일 06:00 KST]
+mock-data.ts (→ 추후 Finnhub으로 교체)
+        ↓
+Supabase DB (stock_quotes, stock_news)
+        ↓
+/api/briefing → Gemini 1.5 Flash AI 분석
+        ↓
+securitya.vercel.app 브리핑 화면
+```
+
+### 다음 세션 시작 전 확인 사항
+
+- [ ] Finnhub API 연동 — mock-data.ts → 실시간 주가/뉴스 교체
+- [ ] Cron 주기 조정 (현재 1일 1회 → 필요 시 변경)
+- [ ] Phase 2: AI 공시 해석기 (SEC EDGAR) 개발 시작

@@ -18,41 +18,57 @@ kakaopaysecurity/
 
 | 영역 | 기술 |
 |------|------|
-| 프론트엔드 | Next.js + Tailwind CSS |
+| 프론트엔드 | Next.js 16 + Tailwind CSS 4 |
 | 백엔드 API | Next.js API Routes |
-| AI/LLM | Claude API (Anthropic) |
-| 데이터 수집 | SEC EDGAR API, Finnhub, yfinance |
-| 벡터 DB | Pinecone 또는 ChromaDB |
-| DB | Supabase (PostgreSQL) |
-| 배포 | Vercel (프론트) + Railway/Fly.io (백엔드) |
+| AI/LLM | Gemini 1.5 Flash (Google AI Studio) |
+| 데이터 수집 | mock-data.ts → 추후 Finnhub API 교체 예정 |
+| DB | Supabase (PostgreSQL) — stock_quotes, stock_news |
+| 벡터 DB | Pinecone 또는 ChromaDB (Phase 2) |
+| 배포 | Vercel (CI/CD — GitHub main push 자동 배포) |
+| Cron | Vercel Cron — 매일 06:00 KST 데이터 수집 |
 
 ## 배포 설정
 
-> 배포 확정 후 이 섹션을 업데이트할 것.
-
 | Key | Value |
 |-----|-------|
-| 서비스 URL | 미정 |
-| 배포 플랫폼 | Vercel (예정) |
+| 서비스 URL | https://securitya.vercel.app |
+| GitHub | github.com/birddogmary24-bit/securitya |
+| 배포 플랫폼 | Vercel (Hobby) |
+| CI/CD | GitHub main push → 자동 배포 |
 | 환경 | Production |
 
-## 환경 변수
+## 환경 변수 (Vercel Production)
 
 ```
-ANTHROPIC_API_KEY=         # Claude API
-FINNHUB_API_KEY=           # 주가/어닝 데이터
-NEWS_API_KEY=              # 뉴스 데이터
-PINECONE_API_KEY=          # 벡터 DB
-SUPABASE_URL=              # DB
-SUPABASE_ANON_KEY=         # DB 인증
+GEMINI_API_KEY=              # Gemini 1.5 Flash (Google AI Studio)
+NEXT_PUBLIC_SUPABASE_URL=    # Supabase 프로젝트 URL
+SUPABASE_SERVICE_ROLE_KEY=   # Supabase 서버 사이드 키 (secret)
+CRON_SECRET=                 # Cron 엔드포인트 인증 키
+FINNHUB_API_KEY=             # 주가/어닝 데이터 (미연동 — Phase 1 완료 전 추가)
 ```
+
+## Supabase DB 스키마
+
+```sql
+-- 주가 데이터 (cron이 주기적으로 upsert)
+stock_quotes: ticker, price, change, change_percent, previous_close, updated_at
+
+-- 뉴스 데이터 (cron이 일 1회 insert)
+stock_news: tickers[], title, summary, source, url, published_at, sentiment, collected_date
+```
+
+## API 엔드포인트
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/api/briefing` | POST | 포트폴리오 기반 AI 브리핑 생성 |
+| `/api/cron/collect-data` | GET | 데이터 수집 (Authorization: Bearer {CRON_SECRET}) |
 
 ## CI/CD
 
-> GitHub Actions 설정 후 이 섹션을 업데이트할 것.
-
-- 자동 배포: 미설정
-- PR 검증: 미설정
+- **자동 배포:** GitHub `main` push → Vercel 자동 빌드/배포
+- **Cron:** `vercel.json` — `0 21 * * *` (매일 06:00 KST)
+- **PR 검증:** 미설정
 
 ## Custom Skills (Claude Code)
 

@@ -23,9 +23,9 @@
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| Next.js 14 | 🔵 결정됨 | SSR, 모바일 웹뷰 최적화, API Routes 통합 | `app/` 디렉토리 구조 사용 |
-| Tailwind CSS | 🔵 결정됨 | 빠른 개발, 모바일 반응형 | 375px 기준 설계 |
-| TypeScript | 🔵 결정됨 | 타입 안전성 | strict 모드 |
+| Next.js 16 | ✅ 적용 완료 | SSR, 모바일 웹뷰 최적화, API Routes 통합 | App Router 구조 |
+| Tailwind CSS 4 | ✅ 적용 완료 | 빠른 개발, 모바일 반응형 | 375px 기준 설계 |
+| TypeScript | ✅ 적용 완료 | 타입 안전성 | strict 모드 |
 
 ---
 
@@ -33,8 +33,8 @@
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| Next.js API Routes | 🔵 결정됨 | 프론트와 통합, 빠른 프로토타입 | Phase 1 MVP에 사용 |
-| FastAPI (Python) | ⚪ 검토 중 | AI 파이프라인 분리 시 필요 | Phase 2 RAG 구현 시 재검토 |
+| Next.js API Routes | ✅ 적용 완료 | 프론트와 통합, 빠른 프로토타입 | `/api/briefing`, `/api/cron/collect-data` |
+| FastAPI (Python) | ❌ 제외 | Phase 1 범위 초과 | Phase 2 RAG 구현 시 재검토 |
 
 ---
 
@@ -42,10 +42,11 @@
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| Claude API (Anthropic) | 🔵 결정됨 | 한국어 성능 우수, RAG 적합 | `claude-3-5-sonnet` 예정 |
-| Prompt Engineering | ⚪ 검토 중 | 브리핑 생성 품질 좌우 | 포트폴리오 맥락 주입 방식 설계 필요 |
-| RAG (Retrieval-Augmented Generation) | 🔵 결정됨 | SEC 공시·뉴스 기반 답변 근거 확보 | Phase 2부터 구현 |
-| Streaming 응답 | 🔵 결정됨 | Q&A 채팅 UX | `POST /api/chat` 스트리밍 |
+| Gemini 1.5 Flash | ✅ 적용 완료 | 무료 티어 충분, 한국어 성능 우수 | `@google/generative-ai` SDK |
+| Claude API | ❌ 제외 | Gemini로 교체 결정 | 추후 재검토 가능 |
+| Prompt Engineering | ✅ 적용 완료 | 포트폴리오 맥락 주입 | JSON 구조화 출력 |
+| RAG | 🔵 결정됨 | SEC 공시·뉴스 기반 답변 | Phase 2부터 구현 |
+| Streaming 응답 | 🔵 결정됨 | Q&A 채팅 UX | Phase 3 |
 
 ---
 
@@ -53,11 +54,12 @@
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| SEC EDGAR API | 🔵 결정됨 | 10-K/10-Q/8-K 원문 무료 공개 | Phase 2에서 구현 |
-| Finnhub API | 🔵 결정됨 | 주가·어닝 데이터, 무료 티어 | Phase 1 MVP |
-| yfinance | ⚪ 검토 중 | 주가 백업 소스 | Finnhub 대체용 |
-| NewsAPI | 🔵 결정됨 | 미국주식 관련 뉴스 | Phase 1 MVP |
-| 경제 캘린더 API | ⚪ 검토 중 | FOMC·고용지표 일정 | Finnhub 내장 기능 검토 중 |
+| Mock 데이터 | ✅ 적용 완료 | Finnhub 연동 전 임시 | `mock-data.ts` → Supabase DB |
+| Finnhub API | 🔵 결정됨 | 주가·어닝·뉴스, 무료 60req/분 | Phase 1 완료 전 교체 예정 |
+| NewsAPI | ❌ 제외 | Finnhub으로 통합 (뉴스 포함) | 별도 연동 불필요 |
+| SEC EDGAR API | 🔵 결정됨 | 10-K/10-Q/8-K 원문 무료 | Phase 2 |
+| yfinance | ❌ 제외 | Finnhub으로 충분 | |
+| 경제 캘린더 | 🔵 결정됨 | Finnhub 내장 기능 활용 | Phase 1 |
 
 ---
 
@@ -65,56 +67,59 @@
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| Supabase (PostgreSQL) | 🔵 결정됨 | 무료 티어, 빠른 셋업, RLS 지원 | 포트폴리오·브리핑 히스토리 저장 |
-| Pinecone | ⚪ 검토 중 | 관리형 벡터 DB, 빠른 검색 | Phase 2 RAG |
-| ChromaDB | ⚪ 검토 중 | 로컬 실행 가능, 무료 | Pinecone 대안 |
-
-> **미결정:** Pinecone vs ChromaDB — Phase 2 시작 전 결정 필요.
-> 데모 목적이면 ChromaDB(무료·로컬), 확장성 고려 시 Pinecone.
+| Supabase (PostgreSQL) | ✅ 적용 완료 | 무료 티어, RLS 지원 | `stock_quotes`, `stock_news` 운영 중 |
+| Pinecone | ⚪ 검토 중 | 관리형 벡터 DB | Phase 2 RAG |
+| ChromaDB | ⚪ 검토 중 | 로컬 무료 | Pinecone 대안 |
 
 ---
 
-## 6. 벡터 임베딩
+## 6. 데이터 파이프라인 (Cron)
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| text-embedding-3-small (OpenAI) | ⚪ 검토 중 | 비용 저렴, 성능 우수 | |
-| Claude Embeddings | ⚪ 검토 중 | LLM과 동일 벤더 통일 | |
-
-> **미결정:** 임베딩 모델 미확정. Phase 2 RAG 설계 시 결정.
+| Vercel Cron | ✅ 적용 완료 | 별도 인프라 없이 스케줄 실행 | 매일 06:00 KST (`0 21 * * *`) |
+| `/api/cron/collect-data` | ✅ 적용 완료 | mock → DB 저장 (Finnhub 교체 예정) | Bearer 인증 |
 
 ---
 
-## 7. 배포 인프라
+## 7. 벡터 임베딩
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| Vercel | 🔵 결정됨 | Next.js 최적화, 무료 티어 | 프론트엔드 + API Routes |
-| Railway | ⚪ 검토 중 | 백엔드 분리 시 사용 | FastAPI 분리할 경우 |
-| Fly.io | ⚪ 검토 중 | Railway 대안 | |
-| GitHub Actions | ⚪ 검토 중 | CI/CD 자동 배포 | 미설정 |
+| text-embedding-3-small (OpenAI) | ⚪ 검토 중 | 비용 저렴, 성능 우수 | Phase 2 결정 |
+| Gemini Embeddings | ⚪ 검토 중 | LLM과 동일 벤더 통일 | Phase 2 결정 |
 
 ---
 
-## 8. 인증 / 보안
+## 8. 배포 인프라
 
 | 기술 | 상태 | 결정 사유 | 비고 |
 |------|------|-----------|------|
-| 포트폴리오 직접 입력 | 🔵 결정됨 | 프로토타입 범위 — 실제 인증 대체 | 데모 목적 |
-| Supabase Auth | ⚪ 검토 중 | 실서비스 전환 시 | 프로토타입 범위 외 |
+| Vercel | ✅ 적용 완료 | Next.js 최적화, GitHub CI/CD 자동 연동 | `securitya.vercel.app` |
+| GitHub | ✅ 적용 완료 | 소스 관리, CI/CD 트리거 | `birddogmary24-bit/securitya` |
+| Railway | ❌ 제외 | Vercel로 통합 | |
+| Fly.io | ❌ 제외 | Vercel로 통합 | |
+| GitHub Actions | ❌ 제외 | Vercel 자동 배포로 대체 | |
 
 ---
 
-## 9. 핵심 미결정 사항
+## 9. 인증 / 보안
 
-> 개발 전 반드시 결정해야 하는 항목들.
+| 기술 | 상태 | 결정 사유 | 비고 |
+|------|------|-----------|------|
+| 포트폴리오 직접 입력 | ✅ 적용 완료 | 프로토타입 범위 — 실제 인증 대체 | localStorage |
+| CRON_SECRET | ✅ 적용 완료 | Cron 엔드포인트 무단 호출 방지 | Bearer 토큰 방식 |
+| Supabase Auth | ⚪ 검토 중 | 실서비스 전환 시 | Phase 3 이후 |
+
+---
+
+## 10. 핵심 미결정 사항
 
 | 항목 | 옵션 | 결정 기한 |
 |------|------|-----------|
 | 벡터 DB | Pinecone vs ChromaDB | Phase 2 시작 전 |
-| 임베딩 모델 | OpenAI vs Claude | Phase 2 시작 전 |
-| 백엔드 분리 여부 | Next.js API Routes 통합 vs FastAPI 분리 | Phase 2 시작 전 |
-| 경제 캘린더 소스 | Finnhub 내장 vs 별도 API | Phase 1 개발 중 |
+| 임베딩 모델 | OpenAI vs Gemini | Phase 2 시작 전 |
+| Finnhub 연동 | mock-data.ts 교체 | Phase 1 완료 전 |
 
 ---
 
@@ -123,3 +128,4 @@
 | 날짜 | 변경 내용 |
 |------|-----------|
 | 2026-03-21 | 초안 작성 — 전체 기술 스택 후보 정리 |
+| 2026-03-21 | 2차 업데이트 — 실제 구현 반영 (Gemini, Supabase, Vercel Cron, CI/CD) |

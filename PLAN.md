@@ -10,32 +10,34 @@
 ## Phase 1: 브리핑 MVP
 **목표:** AI 종목 브리핑 핵심 기능 동작 확인
 
-1. **프로젝트 셋업**
-   - Next.js + Tailwind CSS 초기 설정
-   - Supabase DB 연결
-   - 환경 변수 구성
+1. **프로젝트 셋업** ✅
+   - Next.js 16 + Tailwind CSS 4 초기 설정
+   - Supabase DB 연결 (stock_quotes, stock_news)
+   - Vercel 환경 변수 구성
 
-2. **포트폴리오 입력 UI**
-   - 종목 + 수량 입력 화면 (모바일 웹뷰 375px 기준)
-   - 로컬 상태 관리
+2. **포트폴리오 입력 UI** ✅
+   - 종목 + 수량 입력 화면 (모바일 375px)
+   - localStorage 상태 관리
 
-3. **데이터 수집 파이프라인**
-   - Finnhub/yfinance 주가 데이터
-   - NewsAPI 뉴스 수집
-   - 경제 캘린더 API (FOMC 등)
+3. **데이터 수집 파이프라인** 🔄
+   - ✅ Supabase DB + Vercel Cron 구조 완성
+   - ✅ mock-data.ts → DB 저장 흐름 구현
+   - ⏳ Finnhub API 실시간 연동 (mock 교체 예정)
+   - ⏳ 경제 캘린더 (Finnhub 내장)
 
-4. **LLM 브리핑 생성**
-   - Claude API 연동
+4. **LLM 브리핑 생성** ✅
+   - Gemini 1.5 Flash 연동 (`@google/generative-ai`)
    - 포트폴리오 기반 개인화 프롬프트
-   - 선제적 제안 생성 ("오늘 밤 FOMC — 변동성 대비...")
+   - 선제적 제안 생성
 
-5. **브리핑 카드 UI**
+5. **브리핑 카드 UI** ✅
    - 카드형 종목별 브리핑 리스트
-   - A사 디자인 톤 (밝은 배경, 노란색 포인트)
    - 종목별 컬러 코딩 (🔴/🟡/🟢)
+   - AI/Mock 뱃지, KST 생성 시각, 데이터 출처 표기
 
-6. **배포**
-   - Vercel 배포
+6. **배포** ✅
+   - Vercel CI/CD (GitHub main push → 자동 배포)
+   - URL: https://securitya.vercel.app
 
 ---
 
@@ -81,8 +83,8 @@
 
 ## 현재 상태
 
-| Phase | 상태 |
-|-------|------|
-| Phase 1 | 🔄 진행 중 |
-| Phase 2 | ⏳ 미시작 |
-| Phase 3 | ⏳ 미시작 |
+| Phase | 상태 | 비고 |
+|-------|------|------|
+| Phase 1 | 🔄 진행 중 | Finnhub 실시간 연동만 남음 |
+| Phase 2 | ⏳ 미시작 | SEC EDGAR RAG 파이프라인 |
+| Phase 3 | ⏳ 미시작 | 대화형 Q&A |
