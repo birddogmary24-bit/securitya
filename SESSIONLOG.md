@@ -1,6 +1,6 @@
 # AI 미국주식 브리핑 서비스 — 세션 작업 로그
 
-> **최종 업데이트:** 2026-03-21
+> **최종 업데이트:** 2026-03-22
 >
 > 새 세션 시작 시 이 파일을 먼저 읽고 시작할 것.
 > 작업 완료 후 이 파일에 내용을 추가할 것.
@@ -114,4 +114,109 @@ securitya.vercel.app 브리핑 화면
 
 - [ ] Finnhub API 연동 — mock-data.ts → 실시간 주가/뉴스 교체
 - [ ] Cron 주기 조정 (현재 1일 1회 → 필요 시 변경)
-- [ ] Phase 2: AI 공시 해석기 (SEC EDGAR) 개발 시작
+- [x] Phase 2: AI 공시 해석기 (SEC EDGAR) 개발 시작 ← PLAN.md에 Phase 1로 통합
+
+---
+
+## 2026-03-22 | 3차 세션 — Proposal 대폭 개편 (페르소나 + 3 정보 풀 + 댓글 시스템)
+
+### 작업 요약
+Proposal 전면 개편. 3가지 새 컨셉(투자자 페르소나, 3가지 정보 풀 프레임워크, 구조화된 댓글·토론 시스템) 통합. AI Q&A 챗봇은 Phase 4로 분리(TBD). 총 5개 문서 수정.
+
+### 주요 변경 사항
+
+| # | 변경 | 내용 |
+|---|------|------|
+| 1 | **투자자 페르소나 시스템 추가** | 온보딩 시 8가지 투자 특성(스윙매매, 장기투자, 스캘핑, 우량주, ETF, 소형주, 테크주, 배당주) 1~5점 자가 평가. 확증편향 깨기 — AI가 보완적 관점 선제적 제안 |
+| 2 | **3가지 정보 풀 프레임워크** | Pool 1(공식 데이터: SEC 공시, 실적), Pool 2(공개 정보: 뉴스, Reddit, X), Pool 3(집단 지성: AI 정보 기반 댓글·토론). 기존 "3가지 벽"에 대한 해법으로 매핑 |
+| 3 | **기능 3 재구성** | "AI Q&A + 커뮤니티" → "구조화된 집단 지성 — AI 정보 기반 댓글·토론 시스템" (횡단 기능). 별도 탭이 아니라 모든 AI 정보 콘텐츠에 댓글 적용 |
+| 4 | **AI Q&A 챗봇 분리** | 기능 4 / Phase 4로 분리 (TBD) |
+| 5 | **Phase 재배치** | Phase 1: 브리핑+페르소나+댓글, Phase 2: 공시해석+댓글고도화, Phase 3: 크로스풀+풀론칭, Phase 4: AI Q&A 챗봇(TBD) |
+
+### 수정된 파일
+
+| 파일 | 주요 변경 |
+|------|----------|
+| `docs/proposal-detailed.md` | 새 섹션 4(솔루션 프레임워크) 추가, 기능 1 페르소나 통합, 기능 3 횡단 댓글 시스템으로 재구성, 검증 지표/실행 방안 업데이트 |
+| `docs/proposal-executive-summary.md` | 솔루션 프레임워크 간략 추가, 기능 3→횡단 댓글, 기능 4 Q&A TBD, Phase 4행 추가 |
+| `PRD.md` | 솔루션 프레임워크, UX Flow(온보딩+댓글), 기술 아키텍처(페르소나 엔진+Pool 3) 업데이트 |
+| `docs/competitor-analysis.md` | 비교 매트릭스에 "투자자 페르소나 개인화", "구조화된 AI 기반 커뮤니티" 2행 추가 |
+| `PLAN.md` | Phase 1에 페르소나+댓글 포함, SEC EDGAR Phase 1 통합, Phase 4(AI Q&A TBD) 추가 |
+
+### 핵심 설계 결정
+
+| 결정 | 이유 |
+|------|------|
+| 페르소나는 별도 기능이 아닌 기능 1의 엔진 | 선제적 제안을 개인 맞춤으로 만드는 기반 |
+| Pool 3는 별도 커뮤니티 탭 ❌ → 모든 AI 정보에 댓글 | 브리핑/공시/뉴스 등 AI가 전달하는 모든 정보에 토론 가능 |
+| AI Q&A 챗봇은 Phase 4로 분리 | 우선순위 조정. 댓글 시스템이 더 먼저 |
+| Pool 3를 Phase 1 MVP에 포함 | 공격적이지만 초기 리텐션 확보 + 차별화 |
+
+### 다음 세션 시작 전 확인 사항
+
+- [x] 투자자 페르소나 온보딩 UI 구현 ← 4차 세션 완료
+- [ ] 브리핑 카드에 댓글 기능 추가
+- [ ] 페르소나 기반 LLM 프롬프트 개선 (보완적 관점 판단 엔진)
+- [ ] Finnhub API 연동
+
+---
+
+## 2026-03-22 | 4차 세션 — PLAN.md 조정 + 투자자 페르소나 온보딩 구현
+
+### 작업 요약
+PLAN.md Phase 재조정(경제 캘린더/소셜 센티먼트 → Phase 2, SEC EDGAR → Phase 1, 브리핑 히스토리 삭제). 투자자 페르소나 온보딩 기능 풀스택 구현 완료(DB 테이블 + API + UI + LLM 프롬프트 주입).
+
+### 주요 작업
+
+| # | 작업 | 내용 |
+|---|------|------|
+| 1 | PLAN.md Phase 조정 | #4 경제캘린더 → Phase 2, #5 소셜센티먼트 → Phase 2(신규), #10 브리핑히스토리 삭제, #13 SEC EDGAR → Phase 1 |
+| 2 | Supabase 테이블 생성 | `user_personas` 테이블 — 8개 투자 특성 (1~5점), UUID user_id, RLS 설정 |
+| 3 | 타입 정의 | `Persona` 인터페이스, `PERSONA_TRAITS` 배열, `DEFAULT_PERSONA` 상수 추가 |
+| 4 | 유틸 함수 | `persona.ts` — getUserId, getPersona, savePersona, hasPersona |
+| 5 | API 라우트 | `/api/persona` — POST(upsert), GET(조회). Supabase 연동 |
+| 6 | 페르소나 UI | `PersonaForm.tsx` (슬라이더 8개 한 화면) + `/persona` 페이지 |
+| 7 | 포트폴리오 연결 | 포트폴리오 저장 시 페르소나 미설정이면 `/persona`로 리다이렉트 |
+| 8 | LLM 프롬프트 주입 | `buildPersonaPrompt()` — 투자 성향을 Gemini 프롬프트에 주입 |
+| 9 | 홈 페이지 연동 | 브리핑 요청 시 persona 데이터 함께 전송 |
+| 10 | BottomNav 업데이트 | "투자성향" 탭 추가 (사용자 아이콘) |
+
+### 신규/수정 파일
+
+| 파일 | 상태 | 역할 |
+|------|------|------|
+| `supabase/migrations/002_user_personas.sql` | 신규 | DB 테이블 생성 SQL |
+| `app/src/lib/persona.ts` | 신규 | 페르소나 localStorage 유틸 |
+| `app/src/app/api/persona/route.ts` | 신규 | 페르소나 CRUD API |
+| `app/src/components/PersonaForm.tsx` | 신규 | 슬라이더 폼 컴포넌트 |
+| `app/src/app/persona/page.tsx` | 신규 | 페르소나 설정 페이지 |
+| `app/src/lib/types.ts` | 수정 | Persona 인터페이스 추가 |
+| `app/src/components/PortfolioForm.tsx` | 수정 | 저장 후 페르소나 리다이렉트 |
+| `app/src/app/page.tsx` | 수정 | 브리핑에 persona 전달 |
+| `app/src/components/BottomNav.tsx` | 수정 | 투자성향 탭 추가 |
+| `app/src/app/api/briefing/route.ts` | 수정 | 페르소나 프롬프트 주입 |
+| `docs/superpowers/specs/2026-03-22-persona-onboarding-design.md` | 신규 | 설계 문서 |
+
+### 현재 아키텍처 (페르소나 추가 후)
+
+```
+[포트폴리오 저장] → 페르소나 미설정? → /persona (슬라이더 8개)
+                                          ↓
+                                    localStorage + Supabase(user_personas)
+                                          ↓
+[홈 페이지] → /api/briefing (portfolio + persona)
+                    ↓
+              Gemini 프롬프트에 투자 성향 주입
+                    ↓
+              개인화된 브리핑 카드 렌더링
+```
+
+| 11 | 문서 동기화 | CLAUDE.md(DB 스키마/API 추가), proposal-executive-summary.md(Phase 테이블 업데이트), proposal-detailed.md(Phase 1에 SEC EDGAR 포함, Phase 2에 경제캘린더/소셜센티먼트 이동) |
+| 12 | Vercel 배포 | git commit & push → main 자동 배포 |
+
+### 다음 세션 시작 전 확인 사항
+
+- [ ] Vercel 배포 후 실제 동작 확인
+- [ ] 브리핑 카드에 댓글 기능 추가
+- [ ] 페르소나 기반 보완적 관점 엔진 (Phase 2 예정)
+- [ ] Finnhub API 연동

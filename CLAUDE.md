@@ -1,6 +1,6 @@
 # A증권사 AI 브리핑 — 프로젝트 설정
 
-> **최종 업데이트:** 2026-03-21
+> **최종 업데이트:** 2026-03-22
 
 ## 프로젝트 구조
 
@@ -21,11 +21,12 @@ kakaopaysecurity/
 | 프론트엔드 | Next.js 16 + Tailwind CSS 4 |
 | 백엔드 API | Next.js API Routes |
 | AI/LLM | Gemini 1.5 Flash (Google AI Studio) |
-| 데이터 수집 | mock-data.ts → 추후 Finnhub API 교체 예정 |
-| DB | Supabase (PostgreSQL) — stock_quotes, stock_news |
+| 데이터 수집 | Finnhub API (Free) — GitHub Actions 배치 |
+| DB | Supabase (PostgreSQL) — stock_quotes, stock_news + 확장 테이블 |
 | 벡터 DB | Pinecone 또는 ChromaDB (Phase 2) |
 | 배포 | Vercel (CI/CD — GitHub main push 자동 배포) |
-| Cron | Vercel Cron — 매일 06:00 KST 데이터 수집 |
+| 데이터 배치 | GitHub Actions Cron — 평일 06:00 KST |
+| Cron (경량) | Vercel Cron — 헬스체크/캐시 워밍 |
 
 ## 배포 설정
 
@@ -55,13 +56,17 @@ stock_quotes: ticker, price, change, change_percent, previous_close, updated_at
 
 -- 뉴스 데이터 (cron이 일 1회 insert)
 stock_news: tickers[], title, summary, source, url, published_at, sentiment, collected_date
+
+-- 투자자 페르소나 (온보딩 시 저장)
+user_personas: id(uuid), user_id(text, UNIQUE), swing, long_term, scalping, blue_chip, etf, small_cap, tech, dividend (각 int 1~5), created_at, updated_at
 ```
 
 ## API 엔드포인트
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|--------|------|
-| `/api/briefing` | POST | 포트폴리오 기반 AI 브리핑 생성 |
+| `/api/briefing` | POST | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 |
+| `/api/persona` | POST/GET | 투자자 페르소나 저장/조회 |
 | `/api/cron/collect-data` | GET | 데이터 수집 (Authorization: Bearer {CRON_SECRET}) |
 
 ## CI/CD

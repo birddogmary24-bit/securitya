@@ -1,3 +1,36 @@
+export interface Persona {
+  swing: number;
+  longTerm: number;
+  scalping: number;
+  blueChip: number;
+  etf: number;
+  smallCap: number;
+  tech: number;
+  dividend: number;
+}
+
+export const PERSONA_TRAITS: { key: keyof Persona; label: string; description: string }[] = [
+  { key: "swing", label: "스윙매매", description: "수일~수주 단위 매매" },
+  { key: "longTerm", label: "장기투자", description: "1년 이상 보유" },
+  { key: "scalping", label: "스캘핑", description: "초단타 매매" },
+  { key: "blueChip", label: "우량주", description: "대형 안정주 선호" },
+  { key: "etf", label: "ETF", description: "지수/섹터 ETF 투자" },
+  { key: "smallCap", label: "소형주", description: "성장 잠재력 소형주" },
+  { key: "tech", label: "테크주", description: "기술/AI/반도체 섹터" },
+  { key: "dividend", label: "배당주", description: "배당 수익 중심" },
+];
+
+export const DEFAULT_PERSONA: Persona = {
+  swing: 3,
+  longTerm: 3,
+  scalping: 3,
+  blueChip: 3,
+  etf: 3,
+  smallCap: 3,
+  tech: 3,
+  dividend: 3,
+};
+
 export interface StockHolding {
   ticker: string;
   name: string;

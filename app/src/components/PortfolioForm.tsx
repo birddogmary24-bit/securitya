@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { StockHolding, POPULAR_STOCKS } from "@/lib/types";
 import { getPortfolio, savePortfolio } from "@/lib/portfolio";
+import { hasPersona } from "@/lib/persona";
 
 export default function PortfolioForm() {
+  const router = useRouter();
   const [portfolio, setPortfolio] = useState<StockHolding[]>([]);
   const [search, setSearch] = useState("");
   const [saved, setSaved] = useState(false);
@@ -39,6 +42,10 @@ export default function PortfolioForm() {
 
   function handleSave() {
     savePortfolio(portfolio);
+    if (!hasPersona()) {
+      router.push("/persona");
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }

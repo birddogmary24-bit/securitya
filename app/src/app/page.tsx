@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import BriefingCard from "@/components/BriefingCard";
-import { DailyBriefing, StockHolding } from "@/lib/types";
+import { DailyBriefing, StockHolding, Persona } from "@/lib/types";
 import { getPortfolio } from "@/lib/portfolio";
+import { getPersona } from "@/lib/persona";
 
 function LoadingSkeleton() {
   return (
@@ -64,6 +65,7 @@ function EmptyPortfolio() {
 
 export default function HomePage() {
   const [portfolio, setPortfolio] = useState<StockHolding[]>([]);
+  const [persona, setPersona] = useState<Persona | null>(null);
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,16 +74,17 @@ export default function HomePage() {
   useEffect(() => {
     setMounted(true);
     setPortfolio(getPortfolio());
+    setPersona(getPersona());
   }, []);
 
-  const fetchBriefing = useCallback(async (holdings: StockHolding[]) => {
+  const fetchBriefing = useCallback(async (holdings: StockHolding[], userPersona: Persona | null) => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/briefing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portfolio: holdings }),
+        body: JSON.stringify({ portfolio: holdings, persona: userPersona }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -98,9 +101,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (mounted && portfolio.length > 0 && !briefing && !loading) {
-      fetchBriefing(portfolio);
+      fetchBriefing(portfolio, persona);
     }
-  }, [mounted, portfolio, briefing, loading, fetchBriefing]);
+  }, [mounted, portfolio, persona, briefing, loading, fetchBriefing]);
 
   if (!mounted) return <LoadingSkeleton />;
 
@@ -150,7 +153,7 @@ export default function HomePage() {
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
               <p className="text-sm text-red-600 mb-3">{error}</p>
               <button
-                onClick={() => fetchBriefing(portfolio)}
+                onClick={() => fetchBriefing(portfolio, persona)}
                 className="text-sm font-medium text-red-600 underline"
               >
                 다시 시도
@@ -184,7 +187,7 @@ export default function HomePage() {
 
               {/* Refresh */}
               <button
-                onClick={() => fetchBriefing(portfolio)}
+                onClick={() => fetchBriefing(portfolio, persona)}
                 className="w-full py-2.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
               >
                 브리핑 새로고침

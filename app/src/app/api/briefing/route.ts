@@ -1,7 +1,14 @@
 import { NextRequest } from "next/server";
-import { StockHolding, BriefingCard, DailyBriefing, StockQuote, NewsItem } from "@/lib/types";
+import { StockHolding, BriefingCard, DailyBriefing, StockQuote, NewsItem, Persona, PERSONA_TRAITS } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { MOCK_QUOTES, MOCK_NEWS } from "@/lib/mock-data";
+
+function buildPersonaPrompt(persona: Persona): string {
+  const lines = PERSONA_TRAITS.map(
+    (t) => `- ${t.label}: ${persona[t.key]}/5`
+  );
+  return `\n## 사용자 투자 성향\n${lines.join("\n")}\n\n이 사용자의 투자 성향을 고려하여 브리핑 톤과 선제적 제안을 맞춤화하세요.\n예: 장기투자 성향이 높으면 단기 변동보다 펀더멘털 변화에 초점.\n예: 배당주 성향이 높으면 배당 관련 뉴스를 우선 언급.\n예: 스캘핑 성향이 높으면 단기 가격 변동과 기술적 지표에 초점.`;
+}
 
 function getKSTString(): string {
   return new Date().toLocaleString("ko-KR", {
@@ -130,7 +137,7 @@ function buildFallbackBriefing(
 
 export async function POST(request: NextRequest) {
   try {
-    const { portfolio } = (await request.json()) as { portfolio: StockHolding[] };
+    const { portfolio, persona } = (await request.json()) as { portfolio: StockHolding[]; persona?: Persona };
     if (!portfolio || portfolio.length === 0) {
       return Response.json({ error: "포트폴리오가 비어있습니다." }, { status: 400 });
     }
@@ -162,8 +169,11 @@ export async function POST(request: NextRequest) {
 
       const dataLabel = dataSource === "supabase" ? "Supabase DB (수집된 실시간 데이터)" : "Mock 데이터 (DB 미연동)";
 
+      const personaSection = persona ? buildPersonaPrompt(persona) : "";
+
       const prompt = `당신은 AI 투자 브리핑 어시스턴트입니다. 한국 개인 투자자를 위해 미국 주식 브리핑을 생성합니다.
 데이터 출처: ${dataLabel}
+${personaSection}
 
 ## 사용자 포트폴리오
 ${portfolioInfo}
