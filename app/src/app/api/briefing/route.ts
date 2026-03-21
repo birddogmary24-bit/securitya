@@ -176,8 +176,10 @@ ${newsInfo}
 
       return Response.json(briefing);
     } catch (aiError) {
-      console.error("Gemini API error, falling back:", aiError);
+      const errMsg = aiError instanceof Error ? aiError.message : String(aiError);
+      console.error("Gemini API error:", errMsg);
       const briefing = generateFallbackBriefing(portfolio);
+      briefing.macroAlert = `[디버그] Gemini 오류: ${errMsg}`;
       return Response.json(briefing);
     }
   } catch (error) {
