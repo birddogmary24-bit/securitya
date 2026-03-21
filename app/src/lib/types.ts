@@ -43,6 +43,7 @@ export interface DailyBriefing {
   cards: BriefingCard[];
   macroAlert?: string;
   source?: "gemini" | "mock";
+  dataSource?: "supabase" | "mock";
 }
 
 export const POPULAR_STOCKS: StockHolding[] = [

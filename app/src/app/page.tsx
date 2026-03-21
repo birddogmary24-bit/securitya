@@ -137,7 +137,7 @@ export default function HomePage() {
           {briefing && (
             <div className="text-[11px] text-gray-400 space-y-0.5">
               <p>🕐 생성 시각: {briefing.generatedAt} KST</p>
-              <p>📂 데이터 출처: {briefing.source === "gemini" ? "Gemini 1.5 Flash (AI 분석) · Mock 주가/뉴스" : "Mock 데이터 (실시간 미연동)"}</p>
+              <p>📂 데이터 출처: {briefing.source === "gemini" ? `Gemini 1.5 Flash (AI 분석) · ${briefing.dataSource === "supabase" ? "Supabase DB" : "Mock 주가/뉴스"}` : "Mock 데이터 (실시간 미연동)"}</p>
             </div>
           )}
 
