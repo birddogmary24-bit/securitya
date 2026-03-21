@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
     // If no API key, use fallback
     if (!apiKey) {
       const briefing = generateFallbackBriefing(portfolio);
-      briefing.macroAlert = "[디버그] GEMINI_API_KEY 환경변수를 찾을 수 없음";
       return Response.json(briefing);
     }
 
@@ -177,10 +176,8 @@ ${newsInfo}
 
       return Response.json(briefing);
     } catch (aiError) {
-      const errMsg = aiError instanceof Error ? aiError.message : String(aiError);
-      console.error("Gemini API error:", errMsg);
+      console.error("Gemini API error, falling back:", aiError);
       const briefing = generateFallbackBriefing(portfolio);
-      briefing.macroAlert = `[디버그] Gemini 오류: ${errMsg}`;
       return Response.json(briefing);
     }
   } catch (error) {
