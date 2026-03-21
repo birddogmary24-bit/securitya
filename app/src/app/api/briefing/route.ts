@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "포트폴리오가 비어있습니다." }, { status: 400 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     // If no API key, use fallback
     if (!apiKey) {
@@ -85,10 +85,11 @@ export async function POST(request: NextRequest) {
       return Response.json(briefing);
     }
 
-    // Try Claude API
+    // Try Gemini API
     try {
-      const { default: Anthropic } = await import("@anthropic-ai/sdk");
-      const anthropic = new Anthropic({ apiKey });
+      const { GoogleGenerativeAI } = await import("@google/generative-ai");
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       const tickers = portfolio.map((h) => h.ticker);
 
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
         .map((n) => `- [${n.source}] ${n.title}: ${n.summary} (관련: ${n.relatedTickers.join(", ") || "매크로"})`)
         .join("\n");
 
-      const prompt = `당신은 A증권사의 AI 투자 브리핑 어시스턴트입니다. 한국 개인 투자자를 위해 미국 주식 브리핑을 생성합니다.
+      const prompt = `당신은 AI 투자 브리핑 어시스턴트입니다. 한국 개인 투자자를 위해 미국 주식 브리핑을 생성합니다.
 
 ## 사용자 포트폴리오
 ${portfolioInfo}
@@ -143,19 +144,11 @@ ${newsInfo}
 - 투자 조언이 아닌 정보 제공에 집중
 - JSON만 출력 (다른 텍스트 없이)`;
 
-      const message = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
-        messages: [{ role: "user", content: prompt }],
-      });
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
 
-      const content = message.content[0];
-      if (content.type !== "text") {
-        throw new Error("AI 응답 형식 오류");
-      }
-
-      const jsonMatch = content.text.match(/\{[\s\S]*\}/);
-      const briefingData = JSON.parse(jsonMatch ? jsonMatch[0] : content.text);
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const briefingData = JSON.parse(jsonMatch ? jsonMatch[0] : text);
 
       const cards: BriefingCard[] = (briefingData.cards || []).map((card: Record<string, unknown>) => {
         const ticker = card.ticker as string;
@@ -181,7 +174,7 @@ ${newsInfo}
 
       return Response.json(briefing);
     } catch (aiError) {
-      console.error("Claude API error, falling back:", aiError);
+      console.error("Gemini API error, falling back:", aiError);
       const briefing = generateFallbackBriefing(portfolio);
       return Response.json(briefing);
     }
