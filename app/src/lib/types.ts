@@ -41,6 +41,7 @@ export interface DailyBriefing {
   marketOverview: string;
   cards: BriefingCard[];
   macroAlert?: string;
+  source?: "gemini" | "mock";
 }
 
 export const POPULAR_STOCKS: StockHolding[] = [

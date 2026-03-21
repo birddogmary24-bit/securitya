@@ -66,6 +66,7 @@ function generateFallbackBriefing(portfolio: StockHolding[]): DailyBriefing {
     marketOverview: "나스닥은 AI 반도체주 강세에 상승 마감했으나, FOMC 의사록 공개를 앞두고 변동성이 확대될 수 있습니다.",
     cards,
     macroAlert: macroAlert ? macroAlert.summary : undefined,
+    source: "mock" as const,
   };
 }
 
@@ -170,6 +171,7 @@ ${newsInfo}
         marketOverview: briefingData.marketOverview,
         cards,
         macroAlert: briefingData.macroAlert || undefined,
+        source: "gemini",
       };
 
       return Response.json(briefing);

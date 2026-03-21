@@ -119,8 +119,19 @@ export default function HomePage() {
         <EmptyPortfolio />
       ) : (
         <div className="px-4 py-4 space-y-4">
-          {/* Date */}
-          <p className="text-xs text-gray-400">{today}</p>
+          {/* Date + source badge */}
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-400">{today}</p>
+            {briefing && (
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                briefing.source === "gemini"
+                  ? "bg-blue-100 text-blue-600"
+                  : "bg-gray-100 text-gray-400"
+              }`}>
+                {briefing.source === "gemini" ? "✦ Gemini AI" : "Mock 데이터"}
+              </span>
+            )}
+          </div>
 
           {loading ? (
             <div className="text-center">
