@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { StockHolding, POPULAR_STOCKS } from "@/lib/types";
+import { getAllStocks } from "@/lib/stock-tiers";
 import { getPortfolio, savePortfolio } from "@/lib/portfolio";
 import { hasPersona } from "@/lib/persona";
 
@@ -16,7 +17,15 @@ export default function PortfolioForm() {
     setPortfolio(getPortfolio());
   }, []);
 
-  const filteredStocks = POPULAR_STOCKS.filter(
+  // 검색 시 250종목 전체에서 검색, 미검색 시 인기 10종목 표시
+  const allStocksList = getAllStocks().map((s) => ({
+    ticker: s.ticker,
+    name: s.name,
+    nameKr: s.nameKr,
+    quantity: 0,
+  }));
+
+  const filteredStocks = (search ? allStocksList : POPULAR_STOCKS).filter(
     (s) =>
       !portfolio.some((p) => p.ticker === s.ticker) &&
       (s.ticker.toLowerCase().includes(search.toLowerCase()) ||
@@ -120,7 +129,7 @@ export default function PortfolioForm() {
           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FEE500] focus:ring-1 focus:ring-[#FEE500]/50 placeholder:text-gray-300"
         />
         <div className="mt-2 space-y-1">
-          {(search ? filteredStocks : POPULAR_STOCKS.filter((s) => !portfolio.some((p) => p.ticker === s.ticker))).slice(0, 5).map((stock) => (
+          {filteredStocks.slice(0, 8).map((stock) => (
             <button
               key={stock.ticker}
               onClick={() => addStock(stock)}
