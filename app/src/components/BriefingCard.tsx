@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { BriefingCard as BriefingCardType } from "@/lib/types";
 
 const sentimentConfig = {
@@ -57,6 +58,35 @@ export default function BriefingCard({ card }: { card: BriefingCardType }) {
           <p className="text-[12px] font-medium text-[#191919]">
             <span className="mr-1">💡</span> {card.proactivesuggestion}
           </p>
+        </div>
+      )}
+
+      {/* SEC Filings */}
+      {card.recentFilings && card.recentFilings.length > 0 && (
+        <div className="space-y-1.5 pt-1 border-t border-gray-200/50">
+          <p className="text-[11px] text-gray-400 font-medium">최신 공시</p>
+          {card.recentFilings.slice(0, 2).map((filing, i) => {
+            const typeColor =
+              filing.filingType === "10-K" ? "bg-blue-100 text-blue-600" :
+              filing.filingType === "10-Q" ? "bg-green-100 text-green-600" :
+              "bg-orange-100 text-orange-600";
+            return (
+              <div key={i} className="flex items-start gap-1.5">
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${typeColor}`}>
+                  {filing.filingType}
+                </span>
+                <p className="text-[12px] text-gray-500 leading-snug">
+                  {filing.title} ({filing.filedDate})
+                </p>
+              </div>
+            );
+          })}
+          <Link
+            href={`/filings?ticker=${card.ticker}`}
+            className="text-[11px] text-blue-500 font-medium"
+          >
+            공시 전체보기 &rarr;
+          </Link>
         </div>
       )}
 

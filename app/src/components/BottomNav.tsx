@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/", label: "브리핑", icon: BriefingIcon },
   { href: "/portfolio", label: "포트폴리오", icon: PortfolioIcon },
+  { href: "/filings", label: "공시", icon: FilingsIcon },
   { href: "/persona", label: "투자성향", icon: PersonaIcon },
 ];
 
@@ -26,6 +27,17 @@ function PortfolioIcon({ active }: { active: boolean }) {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "#FEE500" : "#999"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="1" x2="12" y2="23" />
       <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  );
+}
+
+function FilingsIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "#FEE500" : "#999"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="2" y1="13" x2="12" y2="13" />
+      <line x1="2" y1="17" x2="10" y2="17" />
     </svg>
   );
 }
