@@ -2,7 +2,7 @@ name: SEC EDGAR Filing Collection
 
 on:
   schedule:
-    - cron: '0 1 * * *' # 매일 10:00 KST (UTC 01:00)
+    - cron: '30 22 * * *' # UTC 22:30 = KST 07:30 (Finnhub 수집 완료 후)
   workflow_dispatch: # 수동 트리거
 
 jobs:
