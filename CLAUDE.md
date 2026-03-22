@@ -21,12 +21,13 @@ kakaopaysecurity/
 | 프론트엔드 | Next.js 16 + Tailwind CSS 4 |
 | 백엔드 API | Next.js API Routes |
 | AI/LLM | Gemini 2.5 Flash / 2.5 Flash-Lite (Google AI Studio, Tier 1) |
-| 데이터 수집 | Finnhub API (Free, 60 req/min) — Vercel Cron 배치 |
-| 공시 수집 | SEC EDGAR API (무료, rate limit 주의) |
-| DB | Supabase (PostgreSQL) — 12개 테이블 (상세: `docs/DATA-CATALOG.md`) |
+| 데이터 수집 | Finnhub API (Free, 60 req/min) — GitHub Actions Cron 배치 |
+| 공시 수집 | SEC EDGAR API (무료, 청크 방식) — GitHub Actions Cron |
+| DB | Supabase (PostgreSQL) — 13개 테이블 (상세: `docs/DATA-CATALOG.md`) |
 | 벡터 DB | Pinecone 또는 ChromaDB (Phase 2) |
-| 배포 | Vercel (CI/CD — GitHub main push 자동 배포) |
-| Cron | Vercel Cron — Finnhub 09:00 KST / SEC 10:00 KST |
+| 배포 | Vercel Hobby (웹 서비스 전용) |
+| Cron | GitHub Actions — Finnhub 09:00 KST / SEC 10:00 KST |
+| 종목 수 | Tier 1 (50) + Tier 2 (500) + Tier 3 (On-demand, 무제한) |
 
 ## 배포 설정
 
@@ -57,7 +58,7 @@ stock_news: tickers[], title, summary, source, url, published_at, sentiment, col
 user_personas: user_id(UNIQUE), swing, long_term, scalping, blue_chip, etf, small_cap, tech, dividend (각 int 1~5)
 
 -- Finnhub 확장 테이블 (003_finnhub_tables.sql)
-stock_profiles: ticker(PK), name, name_kr, sector, market_cap, logo_url, website_url, tier
+stock_profiles: ticker(PK), name, name_kr, sector, market_cap, logo_url, website_url, tier, last_accessed_at
 stock_financials: ticker(PK), pe_ratio, pb_ratio, dividend_yield, week52_high, week52_low, market_cap, beta
 stock_recommendations: ticker(PK), buy, hold, sell, strong_buy, strong_sell, period
 stock_price_targets: ticker(PK), target_high, target_low, target_mean, target_median
@@ -68,6 +69,9 @@ batch_state: batch_type, batch_date, current_offset, total_stocks, status
 
 -- SEC EDGAR 테이블
 sec_filings: ticker, cik, filing_type, filed_date, title, accession_number(UNIQUE), url
+
+-- 캐시 테이블 (004_briefing_cache.sql)
+briefing_cache: cache_key(UNIQUE), briefing_data(JSONB), data_freshness_key, created_at, expires_at(24h TTL)
 ```
 
 > 전체 스키마 상세: `docs/DATA-CATALOG.md`
@@ -76,20 +80,22 @@ sec_filings: ticker, cik, filing_type, filed_date, title, accession_number(UNIQU
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|--------|------|
-| `/api/briefing` | POST | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 (공시/재무/애널리스트 데이터 포함) |
+| `/api/briefing` | POST | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 (캐시 지원, forceRefresh 옵션) |
 | `/api/persona` | POST/GET | 투자자 페르소나 저장/조회 |
 | `/api/filings` | GET | SEC 공시 조회 (?tickers=AAPL,MSFT) |
 | `/api/cron/finnhub-collect` | GET | Finnhub 데이터 배치 수집 (25종목/호출, 청크 방식) |
-| `/api/cron/sec-collect` | GET | SEC EDGAR 공시 수집 |
+| `/api/cron/sec-collect` | GET | SEC EDGAR 공시 수집 (25종목/호출, 청크 방식) |
 | `/api/filings/summarize` | POST | AI 공시 한국어 요약 (모델 fallback 체인) |
+| `/api/stocks/search` | GET | 종목 검색 (?q=TICKER, Tier 3 on-demand 포함) |
 | `/api/cron/collect-data` | GET | 레거시 데이터 수집 (finnhub-collect 리다이렉트) |
 
 ## CI/CD
 
 - **자동 배포:** GitHub `main` push → Vercel 자동 빌드/배포
-- **Cron:** `vercel.json`
-  - `/api/cron/finnhub-collect` — `0 0 * * *` (매일 09:00 KST)
-  - `/api/cron/sec-collect` — `0 1 * * *` (매일 10:00 KST)
+- **Cron:** GitHub Actions (`.github/workflows/`)
+  - `cron-finnhub.yml` — `0 0 * * *` (매일 09:00 KST) — 청크 루프 호출
+  - `cron-sec.yml` — `0 1 * * *` (매일 10:00 KST) — 청크 루프 호출
+- **GitHub Secrets 필요:** `CRON_SECRET`
 - **PR 검증:** 미설정
 
 ## Custom Skills (Claude Code)

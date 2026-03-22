@@ -1,12 +1,12 @@
-# 서비스 종목 리스트 (250종목)
+# 서비스 종목 리스트 (550종목)
 
 > 생성일: 2026-03-22
-> 최종 데이터 수집: 2026-03-22 13:45 KST (Finnhub 배치 완료)
+> Tier 2 확장: 2026-03-22
 
 ## Tier 1 — 핵심 종목 (50개)
 
 | # | 티커 | 종목명 | 한국어명 |
-|---|------|--------|---------|
+|---|------|--------|--------|
 | 1 | AAPL | Apple Inc. | 애플 |
 | 2 | MSFT | Microsoft Corporation | 마이크로소프트 |
 | 3 | NVDA | NVIDIA Corporation | 엔비디아 |
@@ -58,10 +58,10 @@
 | 49 | HD | The Home Depot Inc. | 홈디포 |
 | 50 | BRK.B | Berkshire Hathaway Inc. | 버크셔해서웨이 |
 
-## Tier 2 — 인기 종목 (200개)
+## Tier 2 — 인기 종목 (500개)
 
 | # | 티커 | 종목명 | 한국어명 |
-|---|------|--------|---------|
+|---|------|--------|--------|
 | 1 | RBLX | Roblox Corporation | 로블록스 |
 | 2 | ROKU | Roku Inc. | 로쿠 |
 | 3 | SNAP | Snap Inc. | 스냅 |
@@ -262,7 +262,308 @@
 | 198 | FDX | FedEx Corporation | 페덱스 |
 | 199 | DAL | Delta Air Lines Inc. | 델타항공 |
 | 200 | UAL | United Airlines Holdings | 유나이티드항공 |
+| 201 | TLT | iShares 20+ Year Treasury Bond ETF | 미국장기국채 ETF |
+| 202 | BND | Vanguard Total Bond Market ETF | 미국전체채권 ETF |
+| 203 | AGG | iShares Core U.S. Aggregate Bond ETF | 미국종합채권 ETF |
+| 204 | HYG | iShares iBoxx $ High Yield Corporate Bond ETF | 하이일드채권 ETF |
+| 205 | LQD | iShares iBoxx $ Investment Grade Corporate Bond ETF | 투자등급회사채 ETF |
+| 206 | TIP | iShares TIPS Bond ETF | 물가연동채 ETF |
+| 207 | SHY | iShares 1-3 Year Treasury Bond ETF | 미국단기국채 ETF |
+| 208 | IEF | iShares 7-10 Year Treasury Bond ETF | 미국중기국채 ETF |
+| 209 | GLD | SPDR Gold Shares | 금 ETF |
+| 210 | SLV | iShares Silver Trust | 은 ETF |
+| 211 | USO | United States Oil Fund | 원유 ETF |
+| 212 | UNG | United States Natural Gas Fund | 천연가스 ETF |
+| 213 | PDBC | Invesco Optimum Yield Diversified Commodity Strategy | 원자재종합 ETF |
+| 214 | DBA | Invesco DB Agriculture Fund | 농산물 ETF |
+| 215 | EEM | iShares MSCI Emerging Markets ETF | 신흥국 ETF |
+| 216 | EFA | iShares MSCI EAFE ETF | 선진국(미국제외) ETF |
+| 217 | VWO | Vanguard FTSE Emerging Markets ETF | 신흥국 ETF(뱅가드) |
+| 218 | INDA | iShares MSCI India ETF | 인도 ETF |
+| 219 | MCHI | iShares MSCI China ETF | 중국 ETF |
+| 220 | XLV | Health Care Select Sector SPDR Fund | 헬스케어섹터 ETF |
+| 221 | XLI | Industrial Select Sector SPDR Fund | 산업섹터 ETF |
+| 222 | XLC | Communication Services Select Sector SPDR Fund | 통신섹터 ETF |
+| 223 | XLP | Consumer Staples Select Sector SPDR Fund | 필수소비재 ETF |
+| 224 | XLU | Utilities Select Sector SPDR Fund | 유틸리티섹터 ETF |
+| 225 | XLB | Materials Select Sector SPDR Fund | 소재섹터 ETF |
+| 226 | XLRE | Real Estate Select Sector SPDR Fund | 부동산섹터 ETF |
+| 227 | XBI | SPDR S&P Biotech ETF | 바이오테크 ETF |
+| 228 | BOTZ | Global X Robotics & Artificial Intelligence ETF | 로봇/AI ETF |
+| 229 | ROBO | ROBO Global Robotics and Automation Index ETF | 로보틱스 ETF |
+| 230 | HACK | ETFMG Prime Cyber Security ETF | 사이버보안 ETF |
+| 231 | TAN | Invesco Solar ETF | 태양광 ETF |
+| 232 | LIT | Global X Lithium & Battery Tech ETF | 리튬/배터리 ETF |
+| 233 | ICLN | iShares Global Clean Energy ETF | 글로벌클린에너지 ETF |
+| 234 | ARKG | ARK Genomic Revolution ETF | ARK 유전체혁명 ETF |
+| 235 | ARKW | ARK Next Generation Internet ETF | ARK 차세대인터넷 ETF |
+| 236 | ARKF | ARK Fintech Innovation ETF | ARK 핀테크 ETF |
+| 237 | ARKQ | ARK Autonomous Technology & Robotics ETF | ARK 자율기술 ETF |
+| 238 | VIG | Vanguard Dividend Appreciation ETF | 배당성장 ETF |
+| 239 | DVY | iShares Select Dividend ETF | 배당주 ETF |
+| 240 | HDV | iShares Core High Dividend ETF | 고배당 ETF |
+| 241 | DIVO | Amplify CWP Enhanced Dividend Income ETF | DIVO 배당인컴 ETF |
+| 242 | QYLD | Global X NASDAQ 100 Covered Call ETF | 나스닥커버드콜 ETF |
+| 243 | UPRO | ProShares UltraPro S&P500 | S&P500 3배 레버리지 |
+| 244 | SPXU | ProShares UltraPro Short S&P500 | S&P500 3배 인버스 |
+| 245 | UVXY | ProShares Ultra VIX Short-Term Futures ETF | VIX 1.5배 레버리지 |
+| 246 | SVXY | ProShares Short VIX Short-Term Futures ETF | VIX 인버스 |
+| 247 | LABU | Direxion Daily S&P Biotech Bull 3X | 바이오 3배 레버리지 |
+| 248 | LABD | Direxion Daily S&P Biotech Bear 3X | 바이오 3배 인버스 |
+| 249 | FNGU | MicroSectors FANG+ Index 3X Leveraged ETN | FANG+ 3배 레버리지 |
+| 250 | FNGD | MicroSectors FANG+ Index -3X Inverse Leveraged ETN | FANG+ 3배 인버스 |
+| 251 | JEPQ | JPMorgan Nasdaq Equity Premium Income ETF | JEPQ 나스닥커버드콜 ETF |
+| 252 | SPLG | SPDR Portfolio S&P 500 ETF | S&P500 저비용 ETF |
+| 253 | DIA | SPDR Dow Jones Industrial Average ETF | 다우존스 ETF |
+| 254 | KWEB | KraneShares CSI China Internet ETF | 중국인터넷 ETF |
+| 255 | SMH | VanEck Semiconductor ETF | 반도체 ETF(반에크) |
+| 256 | CDNS | Cadence Design Systems Inc. | 케이던스디자인 |
+| 257 | SNPS | Synopsys Inc. | 시놉시스 |
+| 258 | ANSS | ANSYS Inc. | 앤시스 |
+| 259 | FICO | Fair Isaac Corporation | FICO |
+| 260 | ACN | Accenture plc | 액센추어 |
+| 261 | CTSH | Cognizant Technology Solutions | 코그니전트 |
+| 262 | MPWR | Monolithic Power Systems Inc. | 모놀리식파워 |
+| 263 | SWKS | Skyworks Solutions Inc. | 스카이웍스 |
+| 264 | QRVO | Qorvo Inc. | 코르보 |
+| 265 | FTNT | Fortinet Inc. | 포티넷 |
+| 266 | AKAM | Akamai Technologies Inc. | 아카마이 |
+| 267 | EPAM | EPAM Systems Inc. | EPAM시스템즈 |
+| 268 | PAYC | Paycom Software Inc. | 페이컴 |
+| 269 | MANH | Manhattan Associates Inc. | 맨하탄어소시에이츠 |
+| 270 | NTNX | Nutanix Inc. | 누타닉스 |
+| 271 | VRNS | Varonis Systems Inc. | 바로니스 |
+| 272 | RPD | Rapid7 Inc. | 래피드7 |
+| 273 | TENB | Tenable Holdings Inc. | 테너블 |
+| 274 | CYBR | CyberArk Software Ltd. | 사이버아크 |
+| 275 | QLYS | Qualys Inc. | 퀄리스 |
+| 276 | GEN | Gen Digital Inc. | 젠디지털 |
+| 277 | SMAR | Smartsheet Inc. | 스마트시트 |
+| 278 | APPF | AppFolio Inc. | 앱폴리오 |
+| 279 | TWKS | Thoughtworks Holding Inc. | 소트웍스 |
+| 280 | GLOB | Globant S.A. | 글로벌런트 |
+| 281 | GDDY | GoDaddy Inc. | 고대디 |
+| 282 | WIX | Wix.com Ltd. | 윅스 |
+| 283 | DOCU | DocuSign Inc. | 도큐사인 |
+| 284 | ZM | Zoom Video Communications Inc. | 줌비디오 |
+| 285 | FIVN | Five9 Inc. | 파이브나인 |
+| 286 | AMGN | Amgen Inc. | 암젠 |
+| 287 | CI | The Cigna Group | 시그나 |
+| 288 | CVS | CVS Health Corporation | CVS헬스 |
+| 289 | MCK | McKesson Corporation | 맥케슨 |
+| 290 | ALNY | Alnylam Pharmaceuticals Inc. | 알닐람 |
+| 291 | CRSP | CRISPR Therapeutics AG | 크리스퍼 |
+| 292 | NTLA | Intellia Therapeutics Inc. | 인텔리아 |
+| 293 | BEAM | Beam Therapeutics Inc. | 빔테라퓨틱스 |
+| 294 | BSX | Boston Scientific Corporation | 보스턴사이언티픽 |
+| 295 | BDX | Becton, Dickinson and Company | 벡턴디킨슨 |
+| 296 | ALGN | Align Technology Inc. | 얼라인테크놀로지 |
+| 297 | IDXX | IDEXX Laboratories Inc. | 아이덱스 |
+| 298 | HCA | HCA Healthcare Inc. | HCA헬스케어 |
+| 299 | IQV | IQVIA Holdings Inc. | IQVIA |
+| 300 | A | Agilent Technologies Inc. | 애질런트 |
+| 301 | WAT | Waters Corporation | 워터스 |
+| 302 | HOLX | Hologic Inc. | 홀로직 |
+| 303 | TECH | Bio-Techne Corporation | 바이오테크니 |
+| 304 | INCY | Incyte Corporation | 인사이트 |
+| 305 | NBIX | Neurocrine Biosciences Inc. | 뉴로크린 |
+| 306 | PCVX | Vaxcyte Inc. | 백사이트 |
+| 307 | RARE | Ultragenyx Pharmaceutical Inc. | 울트라제닉스 |
+| 308 | SRPT | Sarepta Therapeutics Inc. | 사렙타 |
+| 309 | BMRN | BioMarin Pharmaceutical Inc. | 바이오마린 |
+| 310 | HZNP | Horizon Therapeutics plc | 호라이즌 |
+| 311 | UTHR | United Therapeutics Corp. | 유나이티드테라퓨틱스 |
+| 312 | MRVI | Maravai LifeSciences Holdings | 마라바이 |
+| 313 | XRAY | DENTSPLY SIRONA Inc. | 덴츠플라이시로나 |
+| 314 | PODD | Insulet Corporation | 인슐렛 |
+| 315 | RVMD | Revolution Medicines Inc. | 레볼루션메디신 |
+| 316 | BKNG | Booking Holdings Inc. | 부킹홀딩스 |
+| 317 | EXPE | Expedia Group Inc. | 익스피디아 |
+| 318 | MAR | Marriott International Inc. | 메리어트 |
+| 319 | HLT | Hilton Worldwide Holdings Inc. | 힐튼 |
+| 320 | ORLY | O'Reilly Automotive Inc. | 오라일리오토 |
+| 321 | AZO | AutoZone Inc. | 오토존 |
+| 322 | ULTA | Ulta Beauty Inc. | 울타뷰티 |
+| 323 | DG | Dollar General Corporation | 달러제너럴 |
+| 324 | DLTR | Dollar Tree Inc. | 달러트리 |
+| 325 | KHC | The Kraft Heinz Company | 크래프트하인즈 |
+| 326 | MDLZ | Mondelez International Inc. | 몬델리즈 |
+| 327 | DECK | Deckers Outdoor Corporation | 데커스아웃도어 |
+| 328 | CL | Colgate-Palmolive Company | 콜게이트팜올리브 |
+| 329 | KMB | Kimberly-Clark Corporation | 킴벌리클라크 |
+| 330 | GIS | General Mills Inc. | 제너럴밀스 |
+| 331 | K | Kellanova | 켈라노바 |
+| 332 | HSY | The Hershey Company | 허쉬 |
+| 333 | SJM | The J.M. Smucker Company | 스머커 |
+| 334 | TPR | Tapestry Inc. | 태피스트리(코치) |
+| 335 | RL | Ralph Lauren Corporation | 랄프로렌 |
+| 336 | WYNN | Wynn Resorts Limited | 윈리조트 |
+| 337 | LVS | Las Vegas Sands Corp. | 라스베이거스샌즈 |
+| 338 | MGM | MGM Resorts International | MGM리조트 |
+| 339 | NCLH | Norwegian Cruise Line Holdings | 노르웨이지안크루즈 |
+| 340 | RCL | Royal Caribbean Cruises Ltd. | 로열캐리비안 |
+| 341 | PGR | The Progressive Corporation | 프로그레시브 |
+| 342 | ALL | The Allstate Corporation | 올스테이트 |
+| 343 | TRV | The Travelers Companies Inc. | 트래블러스 |
+| 344 | USB | U.S. Bancorp | US뱅코프 |
+| 345 | PNC | The PNC Financial Services Group | PNC파이낸셜 |
+| 346 | TFC | Truist Financial Corporation | 트루이스트 |
+| 347 | TROW | T. Rowe Price Group Inc. | T로우프라이스 |
+| 348 | MET | MetLife Inc. | 메트라이프 |
+| 349 | PRU | Prudential Financial Inc. | 프루덴셜 |
+| 350 | AFL | Aflac Incorporated | 애플락 |
+| 351 | AIG | American International Group | AIG |
+| 352 | FITB | Fifth Third Bancorp | 피프스서드 |
+| 353 | MTB | M&T Bank Corporation | M&T뱅크 |
+| 354 | RF | Regions Financial Corporation | 리전스파이낸셜 |
+| 355 | CFG | Citizens Financial Group Inc. | 시티즌스파이낸셜 |
+| 356 | HBAN | Huntington Bancshares Inc. | 헌팅턴뱅크 |
+| 357 | KEY | KeyCorp | 키코프 |
+| 358 | MSCI | MSCI Inc. | MSCI |
+| 359 | MKTX | MarketAxess Holdings Inc. | 마켓액세스 |
+| 360 | NDAQ | Nasdaq Inc. | 나스닥 |
+| 361 | PCAR | PACCAR Inc. | 팩카 |
+| 362 | FAST | Fastenal Company | 패스널 |
+| 363 | ROK | Rockwell Automation Inc. | 록웰오토메이션 |
+| 364 | EMR | Emerson Electric Co. | 에머슨일렉트릭 |
+| 365 | ETN | Eaton Corporation plc | 이튼 |
+| 366 | ITW | Illinois Tool Works Inc. | 일리노이툴웍스 |
+| 367 | LUV | Southwest Airlines Co. | 사우스웨스트항공 |
+| 368 | AAL | American Airlines Group Inc. | 아메리칸항공 |
+| 369 | AXON | Axon Enterprise Inc. | 액손엔터프라이즈 |
+| 370 | CMI | Cummins Inc. | 커민스 |
+| 371 | PH | Parker-Hannifin Corporation | 파커하니핀 |
+| 372 | SWK | Stanley Black & Decker Inc. | 스탠리블랙앤데커 |
+| 373 | GWW | W.W. Grainger Inc. | 그레인저 |
+| 374 | ODFL | Old Dominion Freight Line Inc. | 올드도미니언 |
+| 375 | XPO | XPO Inc. | XPO |
+| 376 | JBHT | J.B. Hunt Transport Services | JB헌트 |
+| 377 | URI | United Rentals Inc. | 유나이티드렌탈 |
+| 378 | WM | Waste Management Inc. | 웨이스트매니지먼트 |
+| 379 | RSG | Republic Services Inc. | 리퍼블릭서비시스 |
+| 380 | VRSK | Verisk Analytics Inc. | 베리스크 |
+| 381 | COP | ConocoPhillips | 코노코필립스 |
+| 382 | HES | Hess Corporation | 헤스 |
+| 383 | CTRA | Coterra Energy Inc. | 코테라에너지 |
+| 384 | EQT | EQT Corporation | EQT |
+| 385 | OKE | ONEOK Inc. | 원옥 |
+| 386 | WMB | The Williams Companies Inc. | 윌리엄스 |
+| 387 | KMI | Kinder Morgan Inc. | 킨더모건 |
+| 388 | ET | Energy Transfer LP | 에너지트랜스퍼 |
+| 389 | HAL | Halliburton Company | 할리버튼 |
+| 390 | BKR | Baker Hughes Company | 베이커휴즈 |
+| 391 | TRGP | Targa Resources Corp. | 타르가리소시스 |
+| 392 | EPD | Enterprise Products Partners LP | 엔터프라이즈프로덕츠 |
+| 393 | CCI | Crown Castle Inc. | 크라운캐슬 |
+| 394 | WELL | Welltower Inc. | 웰타워 |
+| 395 | PSA | Public Storage | 퍼블릭스토리지 |
+| 396 | AVB | AvalonBay Communities Inc. | 아발론베이 |
+| 397 | EQR | Equity Residential | 에퀴티레지덴셜 |
+| 398 | ARE | Alexandria Real Estate Equities | 알렉산드리아RE |
+| 399 | SBAC | SBA Communications Corporation | SBA커뮤니케이션스 |
+| 400 | VICI | VICI Properties Inc. | VICI프로퍼티스 |
+| 401 | DOW | Dow Inc. | 다우 |
+| 402 | PPG | PPG Industries Inc. | PPG인더스트리즈 |
+| 403 | SHW | The Sherwin-Williams Company | 셔윈윌리엄스 |
+| 404 | ECL | Ecolab Inc. | 에코랩 |
+| 405 | VMC | Vulcan Materials Company | 벌칸머티리얼즈 |
+| 406 | MLM | Martin Marietta Materials Inc. | 마틴마리에타 |
+| 407 | DD | DuPont de Nemours Inc. | 듀폰 |
+| 408 | EMN | Eastman Chemical Company | 이스트만케미컬 |
+| 409 | ALB | Albemarle Corporation | 앨버말 |
+| 410 | SRE | Sempra | 셈프라 |
+| 411 | ED | Consolidated Edison Inc. | 컨솔리데이티드에디슨 |
+| 412 | XEL | Xcel Energy Inc. | 엑셀에너지 |
+| 413 | AEP | American Electric Power Co. | 아메리칸일렉트릭파워 |
+| 414 | D | Dominion Energy Inc. | 도미니언에너지 |
+| 415 | EXC | Exelon Corporation | 엑셀론 |
+| 416 | WEC | WEC Energy Group Inc. | WEC에너지 |
+| 417 | ES | Eversource Energy | 에버소스에너지 |
+| 418 | PCG | PG&E Corporation | PG&E |
+| 419 | TCOM | Trip.com Group Limited | 트립닷컴 |
+| 420 | MNSO | MINISO Group Holding Limited | 미니소 |
+| 421 | WB | Weibo Corporation | 웨이보 |
+| 422 | DIDI | DiDi Global Inc. | 디디추싱 |
+| 423 | IQ | iQIYI Inc. | 아이치이 |
+| 424 | ZTO | ZTO Express (Cayman) Inc. | ZTO익스프레스 |
+| 425 | VNET | VNET Group Inc. | VNET그룹 |
+| 426 | KC | Kingsoft Cloud Holdings Limited | 킹소프트클라우드 |
+| 427 | YUMC | Yum China Holdings Inc. | 얌차이나 |
+| 428 | TIGR | UP Fintech Holding Limited | 타이거브로커스 |
+| 429 | CAVA | CAVA Group Inc. | 카바그룹 |
+| 430 | CELH | Celsius Holdings Inc. | 셀시우스 |
+| 431 | DUOL | Duolingo Inc. | 듀오링고 |
+| 432 | HIMS | Hims & Hers Health Inc. | 힘스앤허스 |
+| 433 | RKLB | Rocket Lab USA Inc. | 로켓랩 |
+| 434 | ASTS | AST SpaceMobile Inc. | AST스페이스모바일 |
+| 435 | JOBY | Joby Aviation Inc. | 조비에비에이션 |
+| 436 | ONON | On Holding AG | 온홀딩 |
+| 437 | BIRD | Allbirds Inc. | 올버즈 |
+| 438 | BROS | Dutch Bros Inc. | 더치브로스 |
+| 439 | TOST | Toast Inc. | 토스트 |
+| 440 | GLBE | Global-E Online Ltd. | 글로벌이온라인 |
+| 441 | RXRX | Recursion Pharmaceuticals Inc. | 리커젼 |
+| 442 | SMMT | Summit Therapeutics Inc. | 서밋테라퓨틱스 |
+| 443 | LUNR | Intuitive Machines Inc. | 인튜이티브머신스 |
+| 444 | ADI | Analog Devices Inc. | 아날로그디바이시스 |
+| 445 | NXPI | NXP Semiconductors N.V. | NXP세미컨덕터스 |
+| 446 | MCHP | Microchip Technology Inc. | 마이크로칩테크놀로지 |
+| 447 | STM | STMicroelectronics N.V. | ST마이크로 |
+| 448 | ONTO | Onto Innovation Inc. | 온투이노베이션 |
+| 449 | CRDO | Credo Technology Group Holding | 크레도테크놀로지 |
+| 450 | VRT | Vertiv Holdings Co. | 버티브 |
+| 451 | ANET | Arista Networks Inc. | 아리스타네트웍스 |
+| 452 | APP | AppLovin Corporation | 앱러빈 |
+| 453 | SMTC | Semtech Corporation | 셈텍 |
+| 454 | MMM | 3M Company | 3M |
+| 455 | ADP | Automatic Data Processing Inc. | ADP |
+| 456 | PAYX | Paychex Inc. | 페이첵스 |
+| 457 | CTAS | Cintas Corporation | 신타스 |
+| 458 | NSC | Norfolk Southern Corporation | 노퍽서던 |
+| 459 | CSX | CSX Corporation | CSX |
+| 460 | UNP | Union Pacific Corporation | 유니온퍼시픽 |
+| 461 | BK | The Bank of New York Mellon Corp. | BNY멜론 |
+| 462 | STT | State Street Corporation | 스테이트스트리트 |
+| 463 | MCO | Moody\'s Corporation | 무디스 |
+| 464 | OTIS | Otis Worldwide Corporation | 오티스 |
+| 465 | CARR | Carrier Global Corporation | 캐리어글로벌 |
+| 466 | ZBH | Zimmer Biomet Holdings Inc. | 짐머바이오메트 |
+| 467 | ROP | Roper Technologies Inc. | 로퍼테크놀로지 |
+| 468 | CPRT | Copart Inc. | 코파트 |
+| 469 | VRSN | VeriSign Inc. | 베리사인 |
+| 470 | FOX | Fox Corporation | 폭스 |
+| 471 | NWSA | News Corp | 뉴스코프 |
+| 472 | CHTR | Charter Communications Inc. | 차터커뮤니케이션스 |
+| 473 | LBRDK | Liberty Broadband Corporation | 리버티브로드밴드 |
+| 474 | SIRI | Sirius XM Holdings Inc. | 시리우스XM |
+| 475 | PLNT | Planet Fitness Inc. | 플래닛피트니스 |
+| 476 | CCL | Carnival Corporation | 카니발크루즈 |
+| 477 | H | Hyatt Hotels Corporation | 하얏트 |
+| 478 | IHG | InterContinental Hotels Group | IHG호텔 |
+| 479 | ARMK | Aramark | 아라마크 |
+| 480 | DNUT | Krispy Kreme Inc. | 크리스피크림 |
+| 481 | SOUN | SoundHound AI Inc. | 사운드하운드AI |
+| 482 | IREN | Iris Energy Limited | 아이리스에너지 |
+| 483 | CLSK | CleanSpark Inc. | 클린스파크 |
+| 484 | CIFR | Cipher Mining Inc. | 사이퍼마이닝 |
+| 485 | WULF | TeraWulf Inc. | 테라울프 |
+| 486 | BTDR | Bitdeer Technologies Group | 비트디어 |
+| 487 | CORZ | Core Scientific Inc. | 코어사이언티픽 |
+| 488 | AEHR | Aehr Test Systems | 아에르테스트 |
+| 489 | APLD | Applied Digital Corporation | 어플라이드디지털 |
+| 490 | NVAX | Novavax Inc. | 노바백스 |
+| 491 | DNA | Ginkgo Bioworks Holdings Inc. | 징코바이오웍스 |
+| 492 | OPEN | Opendoor Technologies Inc. | 오픈도어 |
+| 493 | SOXX | iShares Semiconductor ETF | 반도체 ETF(아이셰어즈) |
+| 494 | IBIT | iShares Bitcoin Trust ETF | 비트코인 ETF(블랙록) |
+| 495 | FBTC | Fidelity Wise Origin Bitcoin Fund | 비트코인 ETF(피델리티) |
+| 496 | BITB | Bitwise Bitcoin ETF | 비트코인 ETF(비트와이즈) |
+| 497 | VST | Vistra Corp. | 비스트라 |
+| 498 | CEG | Constellation Energy Corporation | 컨스텔레이션에너지 |
+| 499 | OKLO | Oklo Inc. | 오클로 |
+| 500 | NNE | Nano Nuclear Energy Inc. | 나노뉴클리어에너지 |
 
-## Tier 3 — 일반 종목
+## Tier 3 — On-demand 종목
 
-DB에서 동적 관리 (미구현)
+Tier 1/2에 없는 종목 검색 시 Finnhub API로 실시간 조회 후 DB에 캐시.
+TTL 24시간, 최근 7일 활성 종목은 Cron에서 자동 갱신.

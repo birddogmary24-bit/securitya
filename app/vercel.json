@@ -1,12 +1,2 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/finnhub-collect",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/sec-collect",
-      "schedule": "0 1 * * *"
-    }
-  ]
 }

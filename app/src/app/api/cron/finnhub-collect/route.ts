@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { TIER1_STOCKS, TIER2_STOCKS } from "@/lib/stock-tiers";
+import { TIER1_STOCKS, TIER2_STOCKS, TieredStock } from "@/lib/stock-tiers";
+import { getActiveTier3Tickers } from "@/lib/tier3-ondemand";
 import {
   fetchQuote,
   fetchCompanyNews,
@@ -44,7 +45,17 @@ export async function GET(request: NextRequest) {
 
   try {
     const today = todayKST();
-    const allStocks = [...TIER1_STOCKS, ...TIER2_STOCKS];
+
+    // 활성 Tier 3 종목 조회 (최근 7일 내 접근된 종목)
+    const tier3Tickers = await getActiveTier3Tickers();
+    const tier3Stocks: TieredStock[] = tier3Tickers.map((t) => ({
+      ticker: t,
+      name: t,
+      nameKr: t,
+      tier: 3 as const,
+    }));
+
+    const allStocks = [...TIER1_STOCKS, ...TIER2_STOCKS, ...tier3Stocks];
 
     // Check / create batch_state for today
     const { data: batchRows } = await supabase

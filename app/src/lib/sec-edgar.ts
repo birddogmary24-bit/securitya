@@ -113,3 +113,31 @@ export async function collectSECFilings(
 
   return { filings: allFilings, errors };
 }
+
+/** 청크 단위 SEC 수집 (Vercel 10초 timeout 대응, sleep 200ms) */
+export async function collectSECFilingsChunked(
+  tickers: string[]
+): Promise<{ filings: SecFiling[]; errors: string[] }> {
+  const cikMap = await fetchCIKMap();
+  const allFilings: SecFiling[] = [];
+  const errors: string[] = [];
+
+  for (const ticker of tickers) {
+    const cik = cikMap[ticker.toUpperCase()];
+    if (!cik) {
+      errors.push(`CIK not found for ${ticker}`);
+      continue;
+    }
+
+    try {
+      const filings = await fetchRecentFilings(ticker, cik);
+      allFilings.push(...filings);
+    } catch (err) {
+      errors.push(`${ticker}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    await sleep(200);
+  }
+
+  return { filings: allFilings, errors };
+}
