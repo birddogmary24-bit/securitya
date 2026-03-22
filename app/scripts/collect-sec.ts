@@ -5,30 +5,20 @@
  * 필요 환경변수: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
 
-import { TIER1_STOCKS, TIER2_STOCKS } from "../src/lib/stock-tiers";
+import { TIER1_STOCKS, TIER2_STOCKS, TIER3_STOCKS } from "../src/lib/stock-tiers";
 import { supabase } from "../src/lib/supabase";
 import { collectSECFilings } from "../src/lib/sec-edgar";
 
-// ETF는 SEC 공시가 없으므로 제외
-const ETF_TICKERS = new Set([
-  "SPY", "QQQ", "ARKK", "SOXL", "TQQQ", "SCHD", "JEPI", "SOXS", "SQQQ",
-  "VOO", "VTI", "IWM", "XLF", "XLE", "XLK", "XLV", "XLI", "XLC", "XLP",
-  "XLU", "XLB", "XLRE", "XBI", "TLT", "BND", "AGG", "HYG", "LQD", "TIP",
-  "SHY", "IEF", "GLD", "SLV", "USO", "UNG", "PDBC", "DBA", "EEM", "EFA",
-  "VWO", "INDA", "MCHI", "BOTZ", "ROBO", "HACK", "TAN", "LIT", "ICLN",
-  "ARKG", "ARKW", "ARKF", "ARKQ", "VIG", "DVY", "HDV", "DIVO", "QYLD",
-  "UPRO", "SPXU", "UVXY", "SVXY", "LABU", "LABD", "FNGU", "FNGD",
-  "JEPQ", "SPLG", "DIA", "KWEB", "SMH", "SOXX", "IBIT", "FBTC", "BITB",
-]);
-
 async function main() {
-  const allStocks = [...TIER1_STOCKS, ...TIER2_STOCKS];
+  // isEtf 플래그 활용 — 하드코딩된 ETF 목록 불필요
+  const allStocks = [...TIER1_STOCKS, ...TIER2_STOCKS, ...TIER3_STOCKS];
   const tickers = allStocks
-    .map((s) => s.ticker)
-    .filter((t) => !ETF_TICKERS.has(t));
+    .filter((s) => !s.isEtf)
+    .map((s) => s.ticker);
 
   console.log(`=== SEC EDGAR 공시 수집 시작 ===`);
-  console.log(`대상: ${tickers.length}종목 (ETF ${ETF_TICKERS.size}개 제외)`);
+  const etfCount = allStocks.filter((s) => s.isEtf).length;
+  console.log(`대상: ${tickers.length}종목 (ETF ${etfCount}개 제외)`);
 
   const { filings, errors } = await collectSECFilings(tickers);
 

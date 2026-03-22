@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { TIER1_STOCKS, TIER2_STOCKS, TieredStock } from "@/lib/stock-tiers";
+import { TIER1_STOCKS, TIER2_STOCKS, TIER3_STOCKS, TieredStock, getFullCollectionStocks } from "@/lib/stock-tiers";
 import { getActiveTier3Tickers } from "@/lib/tier3-ondemand";
 import {
   fetchQuote,
@@ -33,7 +33,7 @@ function dateNDaysLater(n: number): string {
   return d.toISOString().split("T")[0];
 }
 
-const tier1Tickers = new Set(TIER1_STOCKS.map((s) => s.ticker));
+const fullCollectionTickers = new Set(getFullCollectionStocks().map((s) => s.ticker));
 
 export async function GET(request: NextRequest) {
   // Auth check
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       tier: 3 as const,
     }));
 
-    const allStocks = [...TIER1_STOCKS, ...TIER2_STOCKS, ...tier3Stocks];
+    const allStocks = [...TIER1_STOCKS, ...TIER2_STOCKS, ...TIER3_STOCKS, ...tier3Stocks];
 
     // Check / create batch_state for today
     const { data: batchRows } = await supabase
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
 
     for (const stock of chunk) {
       const { ticker } = stock;
-      const isTier1 = tier1Tickers.has(ticker);
+      const isFullCollection = fullCollectionTickers.has(ticker);
 
       // ALL tiers: quote
       const quote = await fetchQuote(ticker);
@@ -236,8 +236,8 @@ export async function GET(request: NextRequest) {
         else newsProcessed += rows.length;
       }
 
-      // Tier 1 only: financials, recommendations, price target, insider transactions
-      if (isTier1) {
+      // Tier 1+2 (개별주식): financials, recommendations, price target, insider transactions
+      if (isFullCollection) {
         const financials = await fetchBasicFinancials(ticker);
         if (financials) {
           const { error } = await supabase

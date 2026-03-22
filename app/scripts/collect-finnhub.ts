@@ -8,7 +8,7 @@
  * 필요 환경변수: FINNHUB_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
 
-import { TIER1_STOCKS, TIER2_STOCKS } from "../src/lib/stock-tiers";
+import { getFullCollectionStocks, getBasicCollectionStocks } from "../src/lib/stock-tiers";
 import { supabase } from "../src/lib/supabase";
 import {
   fetchQuote,
@@ -23,7 +23,8 @@ import {
   getRequestCount,
 } from "../src/lib/finnhub";
 
-const tier1Tickers = new Set(TIER1_STOCKS.map((s) => s.ticker));
+// Tier 1+2 개별주식: 전체 6종 API 수집 대상
+const fullCollectionTickers = new Set(getFullCollectionStocks().map((s) => s.ticker));
 
 function todayKST(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
@@ -43,12 +44,14 @@ function dateNDaysLater(n: number): string {
 
 async function main() {
   const today = todayKST();
-  const allStocks = [...TIER1_STOCKS, ...TIER2_STOCKS];
+  const fullStocks = getFullCollectionStocks();    // Tier 1+2 개별주식 (~150개)
+  const basicStocks = getBasicCollectionStocks();  // Tier 3 (나머지 + ETF, ~400개)
+  const allStocks = [...fullStocks, ...basicStocks];
   const fromDate = dateNDaysAgo(7);
   const toDate = today;
 
   console.log(`=== Finnhub 수집 시작: ${today} ===`);
-  console.log(`총 ${allStocks.length}종목 (Tier1: ${TIER1_STOCKS.length}, Tier2: ${TIER2_STOCKS.length})`);
+  console.log(`총 ${allStocks.length}종목 (Full: ${fullStocks.length}, Basic: ${basicStocks.length})`);
 
   let quotesOk = 0;
   let newsOk = 0;
@@ -61,7 +64,7 @@ async function main() {
   for (let i = 0; i < allStocks.length; i++) {
     const stock = allStocks[i];
     const { ticker } = stock;
-    const isTier1 = tier1Tickers.has(ticker);
+    const isFullCollection = fullCollectionTickers.has(ticker);
     const progress = `[${i + 1}/${allStocks.length}]`;
 
     try {
@@ -102,8 +105,8 @@ async function main() {
         if (!error) newsOk += rows.length;
       }
 
-      // Tier 1 only: financials, recommendations, price target, insider
-      if (isTier1) {
+      // Tier 1+2 (개별주식): financials, recommendations, price target, insider
+      if (isFullCollection) {
         const financials = await fetchBasicFinancials(ticker);
         if (financials) {
           const { error } = await supabase.from("stock_financials").upsert(
