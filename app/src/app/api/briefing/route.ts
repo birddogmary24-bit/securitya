@@ -2,6 +2,106 @@ import { NextRequest } from "next/server";
 import { StockHolding, BriefingCard, DailyBriefing, StockQuote, NewsItem, Persona, PERSONA_TRAITS, SecFiling } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { MOCK_QUOTES, MOCK_NEWS } from "@/lib/mock-data";
+import crypto from "crypto";
+
+// --- 캐시 유틸리티 ---
+
+/** 포트폴리오 + 페르소나를 정규화하여 안정적인 캐시 키 생성 */
+function buildCacheKey(portfolio: StockHolding[], persona?: Persona): string {
+  // 종목을 ticker 기준 정렬하여 순서 무관하게 동일 키 생성
+  const sortedPortfolio = [...portfolio]
+    .sort((a, b) => a.ticker.localeCompare(b.ticker))
+    .map((h) => `${h.ticker}:${h.quantity}`);
+  const personaStr = persona
+    ? Object.entries(persona).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join(",")
+    : "none";
+  const raw = `${sortedPortfolio.join("|")}__${personaStr}`;
+  return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 32);
+}
+
+/** DB 데이터의 최신 갱신 시점을 해시로 만들어 데이터 변경 감지 */
+async function getDataFreshnessKey(tickers: string[]): Promise<string> {
+  // 주요 테이블들의 최신 updated_at/published_at을 조합
+  const [quotesRes, newsRes, filingsRes] = await Promise.all([
+    supabase
+      .from("stock_quotes")
+      .select("updated_at")
+      .in("ticker", tickers)
+      .order("updated_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("stock_news")
+      .select("published_at")
+      .order("published_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("sec_filings")
+      .select("filed_date")
+      .in("ticker", tickers)
+      .order("filed_date", { ascending: false })
+      .limit(1),
+  ]);
+
+  const parts = [
+    quotesRes.data?.[0]?.updated_at ?? "no-quotes",
+    newsRes.data?.[0]?.published_at ?? "no-news",
+    filingsRes.data?.[0]?.filed_date ?? "no-filings",
+  ];
+  return crypto.createHash("sha256").update(parts.join("|")).digest("hex").slice(0, 16);
+}
+
+/** 캐시 조회: 키 일치 + 데이터 미갱신 + 미만료 */
+async function getCachedBriefing(cacheKey: string, freshnessKey: string): Promise<DailyBriefing | null> {
+  try {
+    const { data } = await supabase
+      .from("briefing_cache")
+      .select("briefing_data, created_at")
+      .eq("cache_key", cacheKey)
+      .eq("data_freshness_key", freshnessKey)
+      .gt("expires_at", new Date().toISOString())
+      .limit(1)
+      .single();
+
+    if (!data) return null;
+
+    const briefing = data.briefing_data as DailyBriefing;
+    briefing.cached = true;
+    briefing.cachedAt = new Date(data.created_at).toLocaleString("ko-KR", {
+      timeZone: "Asia/Seoul",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    });
+    return briefing;
+  } catch {
+    return null;
+  }
+}
+
+/** 캐시 저장 (upsert) */
+async function saveBriefingCache(cacheKey: string, freshnessKey: string, briefing: DailyBriefing): Promise<void> {
+  try {
+    await supabase.from("briefing_cache").upsert(
+      {
+        cache_key: cacheKey,
+        briefing_data: briefing,
+        data_freshness_key: freshnessKey,
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      },
+      { onConflict: "cache_key" }
+    );
+
+    // 만료된 캐시 정리 (3일 이상)
+    await supabase
+      .from("briefing_cache")
+      .delete()
+      .lt("expires_at", new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString());
+  } catch (err) {
+    console.warn("Cache save failed (non-blocking):", err);
+  }
+}
+
+// --- 기존 유틸리티 ---
 
 function buildPersonaPrompt(persona: Persona): string {
   const lines = PERSONA_TRAITS.map(
@@ -35,58 +135,43 @@ async function fetchMarketData(tickers: string[]): Promise<{
   dataSource: "supabase" | "mock";
 }> {
   try {
-    const { data: quotesData, error: quotesError } = await supabase
-      .from("stock_quotes")
-      .select("*")
-      .in("ticker", tickers);
-
-    const { data: newsData, error: newsError } = await supabase
-      .from("stock_news")
-      .select("*")
-      .order("published_at", { ascending: false })
-      .limit(20);
-
-    // SEC 공시 조회 (최근 30일)
+    // 날짜 계산을 Promise.all 전에 수행
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const { data: filingsData } = await supabase
-      .from("sec_filings")
-      .select("*")
-      .in("ticker", tickers)
-      .gte("filed_date", thirtyDaysAgo.toISOString().split("T")[0])
-      .order("filed_date", { ascending: false })
-      .limit(20);
-
-    const { data: financialsData } = await supabase
-      .from("stock_financials")
-      .select("*")
-      .in("ticker", tickers);
-
-    const { data: recommendationsData } = await supabase
-      .from("stock_recommendations")
-      .select("*")
-      .in("ticker", tickers);
-
-    const { data: priceTargetsData } = await supabase
-      .from("stock_price_targets")
-      .select("*")
-      .in("ticker", tickers);
-
-    const { data: upgradesData } = await supabase
-      .from("stock_upgrades")
-      .select("*")
-      .in("ticker", tickers)
-      .gte("graded_at", new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0])
-      .order("graded_at", { ascending: false });
-
-    const nextWeek = new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
+    const sevenDaysAgoStr = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
     const todayStr = new Date().toISOString().split("T")[0];
-    const { data: earningsData } = await supabase
-      .from("earnings_calendar")
-      .select("*")
-      .in("ticker", tickers)
-      .gte("report_date", todayStr)
-      .lte("report_date", nextWeek);
+    const nextWeek = new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
+
+    // 8개 Supabase 쿼리를 병렬 실행
+    const [
+      quotesRes, newsRes, filingsRes,
+      financialsRes, recommendationsRes, priceTargetsRes,
+      upgradesRes, earningsRes,
+    ] = await Promise.all([
+      supabase.from("stock_quotes").select("*").in("ticker", tickers),
+      supabase.from("stock_news").select("*").order("published_at", { ascending: false }).limit(20),
+      supabase.from("sec_filings").select("*").in("ticker", tickers)
+        .gte("filed_date", thirtyDaysAgoStr).order("filed_date", { ascending: false }).limit(20),
+      supabase.from("stock_financials").select("*").in("ticker", tickers),
+      supabase.from("stock_recommendations").select("*").in("ticker", tickers),
+      supabase.from("stock_price_targets").select("*").in("ticker", tickers),
+      supabase.from("stock_upgrades").select("*").in("ticker", tickers)
+        .gte("graded_at", sevenDaysAgoStr).order("graded_at", { ascending: false }),
+      supabase.from("earnings_calendar").select("*").in("ticker", tickers)
+        .gte("report_date", todayStr).lte("report_date", nextWeek),
+    ]);
+
+    const quotesData = quotesRes.data;
+    const quotesError = quotesRes.error;
+    const newsData = newsRes.data;
+    const newsError = newsRes.error;
+    const filingsData = filingsRes.data;
+    const financialsData = financialsRes.data;
+    const recommendationsData = recommendationsRes.data;
+    const priceTargetsData = priceTargetsRes.data;
+    const upgradesData = upgradesRes.data;
+    const earningsData = earningsRes.data;
 
     if (quotesError || newsError || !quotesData?.length) {
       throw new Error("Supabase data unavailable");
@@ -207,13 +292,44 @@ function buildFallbackBriefing(
 
 export async function POST(request: NextRequest) {
   try {
-    const { portfolio, persona } = (await request.json()) as { portfolio: StockHolding[]; persona?: Persona };
+    const { portfolio, persona, forceRefresh } = (await request.json()) as {
+      portfolio: StockHolding[];
+      persona?: Persona;
+      forceRefresh?: boolean;
+    };
     if (!portfolio || portfolio.length === 0) {
       return Response.json({ error: "포트폴리오가 비어있습니다." }, { status: 400 });
     }
 
     const tickers = portfolio.map((h) => h.ticker);
+    const t0 = Date.now();
+
+    // --- 캐시 체크 (forceRefresh가 아닐 때) ---
+    const cacheKey = buildCacheKey(portfolio, persona);
+    let freshnessKey = "";
+    if (!forceRefresh) {
+      try {
+        freshnessKey = await getDataFreshnessKey(tickers);
+        const cached = await getCachedBriefing(cacheKey, freshnessKey);
+        if (cached) {
+          console.log(`[Briefing Cache HIT] key=${cacheKey.slice(0, 8)}...`);
+          return Response.json(cached);
+        }
+      } catch {
+        // 캐시 조회 실패 시 그냥 새로 생성
+      }
+    }
+
+    const t1 = Date.now();
+    console.log(`[Briefing Timing] cache-check: ${t1 - t0}ms`);
     const { quotes, news, filings, financials, recommendations, priceTargets, upgrades, earnings, dataSource } = await fetchMarketData(tickers);
+
+    const t2 = Date.now();
+    console.log(`[Briefing Timing] fetchMarketData: ${t2 - t1}ms`);
+    // freshnessKey가 아직 없으면 생성 (forceRefresh 시)
+    if (!freshnessKey) {
+      try { freshnessKey = await getDataFreshnessKey(tickers); } catch { freshnessKey = "unknown"; }
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -339,6 +455,8 @@ ${newsInfo}
 - 투자 조언이 아닌 정보 제공에 집중
 - JSON만 출력 (다른 텍스트 없이)`;
 
+      const t3 = Date.now();
+      console.log(`[Briefing Timing] prompt-build: ${t3 - t2}ms`);
       let text = "";
       for (const modelName of BRIEFING_MODELS) {
         try {
@@ -353,6 +471,8 @@ ${newsInfo}
           throw err;
         }
       }
+      const t4 = Date.now();
+      console.log(`[Briefing Timing] gemini-api: ${t4 - t3}ms`);
       if (!text) throw new Error("All AI models exhausted");
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       const briefingData = JSON.parse(jsonMatch ? jsonMatch[0] : text);
@@ -372,7 +492,7 @@ ${newsInfo}
         };
       });
 
-      return Response.json({
+      const result: DailyBriefing = {
         date: new Date().toISOString().split("T")[0],
         generatedAt: getKSTString(),
         greeting: briefingData.greeting,
@@ -381,7 +501,14 @@ ${newsInfo}
         macroAlert: briefingData.macroAlert || undefined,
         source: "gemini",
         dataSource,
-      } as DailyBriefing);
+      };
+
+      const t5 = Date.now();
+      console.log(`[Briefing Timing] total: ${t5 - t0}ms | cache-check: ${t1 - t0}ms | fetchData: ${t2 - t1}ms | prompt: ${t3 - t2}ms | gemini: ${t4 - t3}ms | parse: ${t5 - t4}ms`);
+      // 캐시에 저장 (비동기, 응답 블로킹 안 함)
+      saveBriefingCache(cacheKey, freshnessKey, result).catch(() => {});
+
+      return Response.json(result);
 
     } catch (aiError) {
       console.error("Gemini API error, falling back:", aiError);
