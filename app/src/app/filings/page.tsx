@@ -7,7 +7,7 @@ import { SecFiling } from "@/lib/types";
 import { getPortfolio } from "@/lib/portfolio";
 
 const FILTER_TYPES = ["전체", "10-K", "10-Q", "8-K"] as const;
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 20;
 
 const typeColors: Record<string, string> = {
   "10-K": "bg-blue-100 text-blue-600",
