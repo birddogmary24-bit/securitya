@@ -26,9 +26,9 @@ export async function getOrFetchTier3Stock(
 ): Promise<TieredStock | null> {
   const upperTicker = ticker.toUpperCase();
 
-  // Tier 1/2에 있으면 그냥 반환 (on-demand 불필요)
+  // Tier 1/2/3에 있으면 그냥 반환 (on-demand 불필요)
   const existingTier = getTierForTicker(upperTicker);
-  if (existingTier === 1 || existingTier === 2) {
+  if (existingTier !== null) {
     return null; // 이미 관리되는 종목
   }
 
