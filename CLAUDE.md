@@ -5,7 +5,7 @@
 ## 프로젝트 구조
 
 ```
-kakaopaysecurity/
+securitya/
   app/             # Next.js 웹앱 (프론트엔드 + API Routes)
   docs/            # 기획 문서, 제안서, 리서치
   CLAUDE.md        # 프로젝트 설정 (이 파일)

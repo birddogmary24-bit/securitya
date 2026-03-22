@@ -36,7 +36,7 @@ A증권사 AI Content PM 채용 과제 착수. 기획 문서 2종(executive summ
 ### 프로젝트 문서 구조 (정비 후)
 
 ```
-kakaopaysecurity/
+securitya/
   CLAUDE.md           ← 프로젝트 설정, 스킬, CI/CD 기록
   PLAN.md             ← Phase별 구현 계획
   PRD.md              ← 제품 요구사항 정의서

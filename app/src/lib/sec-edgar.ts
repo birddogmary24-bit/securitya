@@ -1,6 +1,6 @@
 import { SecFiling } from "./types";
 
-const SEC_USER_AGENT = "KakaoPaySecurityAI admin@example.com";
+const SEC_USER_AGENT = "SecurityA-AIBriefing admin@example.com";
 const FILING_TYPES = ["10-K", "10-Q", "8-K"];
 const MAX_DAYS = 90;
 

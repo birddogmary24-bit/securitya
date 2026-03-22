@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // SEC 문서 가져오기
     const secRes = await fetch(url, {
-      headers: { "User-Agent": "KakaoPaySecurityAI admin@example.com" },
+      headers: { "User-Agent": "SecurityA-AIBriefing admin@example.com" },
     });
 
     if (!secRes.ok) {
