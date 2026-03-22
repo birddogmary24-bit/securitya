@@ -89,6 +89,8 @@ export interface DailyBriefing {
   macroAlert?: string;
   source?: "gemini" | "mock";
   dataSource?: "supabase" | "mock";
+  cached?: boolean;           // 캐시된 브리핑 여부
+  cachedAt?: string;          // 캐시 생성 시각 (KST)
 }
 
 export const POPULAR_STOCKS: StockHolding[] = [
