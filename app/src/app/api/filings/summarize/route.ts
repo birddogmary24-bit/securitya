@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Gemini 1.5 Flash로 요약
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `다음은 ${ticker}의 SEC ${filingType} 공시 문서 원문 일부입니다. 한국 개인 투자자가 이해하기 쉽게 한국어로 요약해주세요.
 
