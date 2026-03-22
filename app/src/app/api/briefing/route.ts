@@ -504,11 +504,12 @@ ${newsInfo}
       };
 
       const t5 = Date.now();
-      console.log(`[Briefing Timing] total: ${t5 - t0}ms | cache-check: ${t1 - t0}ms | fetchData: ${t2 - t1}ms | prompt: ${t3 - t2}ms | gemini: ${t4 - t3}ms | parse: ${t5 - t4}ms`);
+      const _timing = { total: t5 - t0, cacheCheck: t1 - t0, fetchData: t2 - t1, promptBuild: t3 - t2, geminiApi: t4 - t3, parseAndBuild: t5 - t4 };
+      console.log(`[Briefing Timing]`, _timing);
       // 캐시에 저장 (비동기, 응답 블로킹 안 함)
       saveBriefingCache(cacheKey, freshnessKey, result).catch(() => {});
 
-      return Response.json(result);
+      return Response.json({ ...result, _timing });
 
     } catch (aiError) {
       console.error("Gemini API error, falling back:", aiError);
