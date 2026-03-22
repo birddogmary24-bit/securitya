@@ -2,12 +2,12 @@ import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-// 저렴한 순서로 fallback 체인
+// 저렴한 순서로 fallback 체인 (2.5 최신 → 2.0 레거시)
 const MODEL_CHAIN = [
+  "gemini-2.5-flash-lite",
   "gemini-2.0-flash-lite",
+  "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
 ];
 
 // SEC 문서에서 텍스트 추출 (HTML 태그 제거, 길이 제한)
