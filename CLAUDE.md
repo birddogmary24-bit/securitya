@@ -23,11 +23,11 @@ securitya/
 | AI/LLM | Gemini 2.5 Flash / 2.5 Flash-Lite (Google AI Studio, Tier 1) |
 | 데이터 수집 | Finnhub API (Free, 60 req/min) — GitHub Actions Cron 배치 |
 | 공시 수집 | SEC EDGAR API (무료, 청크 방식) — GitHub Actions Cron |
-| DB | Supabase (PostgreSQL) — 13개 테이블 (상세: `docs/DATA-CATALOG.md`) |
+| DB | Supabase (PostgreSQL) — 15개 테이블 (상세: `docs/DATA-CATALOG.md`) |
 | 벡터 DB | Pinecone 또는 ChromaDB (Phase 2) |
 | 배포 | Vercel Hobby (웹 서비스 전용) |
-| Cron | GitHub Actions — Finnhub 09:00 KST / SEC 10:00 KST |
-| 종목 수 | Tier 1 (50) + Tier 2 (500) + Tier 3 (On-demand, 무제한) |
+| Cron | GitHub Actions — Finnhub+AI분석 06:30 KST / SEC 07:30 KST |
+| 종목 수 | Tier 1 (50, 전체수집) + Tier 2 (100 개별주식, 전체수집) + Tier 3 (400 개별주식+ETF, quote+news) + On-demand |
 
 ## 배포 설정
 
@@ -70,8 +70,12 @@ batch_state: batch_type, batch_date, current_offset, total_stocks, status
 -- SEC EDGAR 테이블
 sec_filings: ticker, cik, filing_type, filed_date, title, accession_number(UNIQUE), url
 
--- 캐시 테이블 (004_briefing_cache.sql)
+-- 캐시 테이블 (004_briefing_cache.sql) — 레거시, 종목별 캐시로 대체
 briefing_cache: cache_key(UNIQUE), briefing_data(JSONB), data_freshness_key, created_at, expires_at(24h TTL)
+
+-- 종목별 AI 분석 캐시 (005_stock_analysis_cache.sql)
+stock_analysis_cache: ticker+analysis_date(PK), sentiment, summary, key_points(JSONB), proactive_suggestion, related_tickers(JSONB), data_freshness_key, generated_at
+market_overview_cache: analysis_date(PK), greeting, market_overview, macro_alert, data_freshness_key, generated_at
 ```
 
 > 전체 스키마 상세: `docs/DATA-CATALOG.md`
@@ -80,7 +84,7 @@ briefing_cache: cache_key(UNIQUE), briefing_data(JSONB), data_freshness_key, cre
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|--------|------|
-| `/api/briefing` | POST | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 (캐시 지원, forceRefresh 옵션) |
+| `/api/briefing` | POST | 포트폴리오 기반 AI 브리핑 (종목별 캐시 조합, forceRefresh 옵션) |
 | `/api/persona` | POST/GET | 투자자 페르소나 저장/조회 |
 | `/api/filings` | GET | SEC 공시 조회 (?tickers=AAPL,MSFT) |
 | `/api/cron/finnhub-collect` | GET | Finnhub 데이터 배치 수집 (25종목/호출, 청크 방식) |
@@ -93,9 +97,9 @@ briefing_cache: cache_key(UNIQUE), briefing_data(JSONB), data_freshness_key, cre
 
 - **자동 배포:** GitHub `main` push → Vercel 자동 빌드/배포
 - **Cron:** GitHub Actions (`.github/workflows/`)
-  - `cron-finnhub.yml` — `0 0 * * *` (매일 09:00 KST) — 청크 루프 호출
-  - `cron-sec.yml` — `0 1 * * *` (매일 10:00 KST) — 청크 루프 호출
-- **GitHub Secrets 필요:** `CRON_SECRET`
+  - `cron-finnhub.yml` — `30 21 * * *` (매일 06:30 KST, UTC 21:30) — Finnhub 수집 + AI 분석 생성
+  - `cron-sec.yml` — `30 22 * * *` (매일 07:30 KST, UTC 22:30) — SEC 공시 수집
+- **GitHub Secrets 필요:** `CRON_SECRET`, `GEMINI_API_KEY`
 - **PR 검증:** 미설정
 
 ## Custom Skills (Claude Code)
