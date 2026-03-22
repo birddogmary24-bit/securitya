@@ -1,6 +1,6 @@
 # AI 미국주식 브리핑 서비스 — 개발 스펙
 
-> **최종 업데이트:** 2026-03-21
+> **최종 업데이트:** 2026-03-22
 >
 > A증권사 AI Content PM 채용 과제 프로토타입.
 > A사 앱에서 웹뷰(Add-on) 방식으로 접근하는 웹 서비스.
@@ -61,89 +61,101 @@ A사 앱
 
 ---
 
-## 기술 스택 (제안)
+## 기술 스택 (구현 완료)
 
-| 영역 | 기술 | 이유 |
+| 영역 | 기술 | 상태 |
 |------|------|------|
-| **프론트엔드** | Next.js + Tailwind CSS | 모바일 웹뷰 최적화, SSR, 빠른 개발 |
-| **백엔드 API** | Next.js API Routes 또는 FastAPI | 프론트와 통합 또는 Python AI 파이프라인 분리 |
-| **AI/LLM** | Claude API (Anthropic) | RAG 기반 분석, 한국어 성능 우수 |
-| **데이터 수집** | SEC EDGAR API, 뉴스 API (NewsAPI/Finnhub), yfinance | 공시/뉴스/주가 데이터 |
-| **벡터 DB** | Pinecone 또는 ChromaDB | RAG용 임베딩 저장 |
-| **배포** | Vercel (프론트) + Railway/Fly.io (백엔드) | 빠른 배포, 무료 티어 활용 |
-| **DB** | Supabase (PostgreSQL) | 사용자 포트폴리오, 브리핑 히스토리 |
+| **프론트엔드** | Next.js 16 + Tailwind CSS 4 | ✅ 모바일 375px 최적화 |
+| **백엔드 API** | Next.js API Routes | ✅ 6개 엔드포인트 |
+| **AI/LLM** | Gemini 1.5 Flash (Google AI Studio) | ✅ 통합 프롬프트 (페르소나+공시+재무+애널리스트) |
+| **데이터 수집** | Finnhub API (Free 60 req/min) | ✅ 1,000종목 Tier 시스템 |
+| **공시 수집** | SEC EDGAR API | ✅ 10-K/10-Q/8-K 자동 수집 |
+| **벡터 DB** | Pinecone 또는 ChromaDB | ⏳ Phase 2 (공시 RAG 파이프라인) |
+| **배포** | Vercel (Hobby, CI/CD) | ✅ securitya.vercel.app |
+| **DB** | Supabase (PostgreSQL) — 12개 테이블 | ✅ DATA-CATALOG.md 참조 |
+| **Cron** | Vercel Cron (2개) | ✅ Finnhub 09:00 KST / SEC 10:00 KST |
 
 ---
 
-## 데이터 파이프라인
+## 데이터 파이프라인 (구현 완료)
 
 ```
-[데이터 수집 (Cron/Scheduler)]
-  ├─ SEC EDGAR API → 10-K/Q, 8-K 원문
-  ├─ Finnhub/yfinance → 주가, 어닝 데이터
-  ├─ News API → 미국주식 관련 뉴스
-  └─ 경제 캘린더 API → FOMC, 고용지표 일정
+[Vercel Cron — 매일 자동 실행]
+  ├─ 09:00 KST: Finnhub 배치 수집 (/api/cron/finnhub-collect) ✅
+  │   └─ 1,000종목 × 3단계 Tier, 25종목/호출 청크, batch_state 추적
+  └─ 10:00 KST: SEC EDGAR 수집 (/api/cron/sec-collect) ✅
+      └─ CIK 매핑 → 10-K/10-Q/8-K 90일 내 수집
 
          ↓
 
-[데이터 처리]
-  ├─ 공시 원문 → 청킹 → 임베딩 → Vector DB
-  ├─ 뉴스 → 요약 + 센티먼트 분석
-  └─ 주가 데이터 → 변동 감지
+[Supabase (PostgreSQL) — 12개 테이블] ✅
+  ├─ stock_quotes — 주가 (Tier 1/2/3 전체)
+  ├─ stock_news — 기업별 + 일반 시장 뉴스
+  ├─ stock_financials — PER, PBR, 배당, 52주 고저
+  ├─ stock_recommendations — 애널리스트 컨센서스
+  ├─ stock_price_targets — 목표가
+  ├─ stock_upgrades — 등급 변경
+  ├─ stock_insider_transactions — 내부자 거래
+  ├─ earnings_calendar — 어닝 일정
+  ├─ sec_filings — SEC 공시 (10-K/Q/8-K)
+  ├─ user_personas — 투자자 페르소나 (8개 특성)
+  ├─ stock_profiles — 기업 프로필
+  └─ batch_state — Cron 배치 진행 추적
 
          ↓
 
-[AI 분석 엔진 (LLM + RAG)]
-  ├─ 포트폴리오 매칭 → 관련 이벤트 필터링
-  ├─ 교차 분석 → 종목간 연쇄 영향
-  ├─ 선제적 제안 생성 → 손절라인, 변동성 경고
-  └─ Q&A 응답 생성 → 출처 인용 포함
+[AI 분석 엔진] ✅
+  Gemini (fallback 체인: 2.5-flash → 2.5-flash-lite → 2.0-flash → 2.0-flash-lite)
+  ├─ 포트폴리오 + 페르소나 기반 개인화 브리핑
+  ├─ 공시 + 재무 + 애널리스트 + 목표가 + 등급변경 + 어닝일정 통합 프롬프트
+  ├─ SEC 공시 AI 한국어 요약
+  └─ 선제적 제안 생성
 
          ↓
 
-[프론트엔드 전달]
-  ├─ 브리핑 카드 렌더링
-  ├─ 공시 해석 페이지
-  └─ 채팅 인터페이스
+[프론트엔드 — 4탭 구성] ✅
+  ├─ [브리핑] 카드형 종목별 AI 브리핑 + 공시 표시
+  ├─ [포트폴리오] 종목 검색/추가/수량 관리
+  ├─ [공시] SEC 공시 목록 + 유형 필터 + AI 요약
+  └─ [투자성향] 페르소나 슬라이더 설정
 ```
 
 ---
 
-## 주요 API 엔드포인트 (안)
+## API 엔드포인트 (구현 완료)
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/api/briefing` | 오늘의 AI 브리핑 조회 (포트폴리오 기반) |
-| GET | `/api/briefing/:date` | 특정 날짜 브리핑 히스토리 |
-| GET | `/api/filing/:ticker` | 종목별 SEC 공시 해석 목록 |
-| GET | `/api/filing/:ticker/:filingId` | 특정 공시 상세 해석 |
-| POST | `/api/chat` | Q&A 대화 (스트리밍 응답) |
-| GET/POST | `/api/portfolio` | 포트폴리오 조회/수정 |
-| GET | `/api/calendar` | 경제 캘린더 (FOMC 등 예정 이벤트) |
+| 메서드 | 경로 | 설명 | 상태 |
+|--------|------|------|------|
+| POST | `/api/briefing` | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 (공시/재무/애널리스트 통합) | ✅ |
+| POST/GET | `/api/persona` | 투자자 페르소나 저장/조회 | ✅ |
+| GET | `/api/filings?tickers=` | SEC 공시 조회 (종목별 필터) | ✅ |
+| POST | `/api/filings/summarize` | AI 공시 한국어 요약 (모델 fallback 체인) | ✅ |
+| GET | `/api/cron/finnhub-collect` | Finnhub 1,000종목 배치 수집 (청크 방식) | ✅ |
+| GET | `/api/cron/sec-collect` | SEC EDGAR 공시 수집 | ✅ |
+| GET | `/api/cron/collect-data` | 레거시 (finnhub-collect 리다이렉트) | ✅ |
 
 ---
 
-## 개발 우선순위 (Phase)
+## 개발 우선순위 (Phase) — 최신: `PLAN.md` 참조
 
-### Phase 1: 브리핑 MVP
-1. 프로젝트 셋업 (Next.js + Tailwind + DB)
-2. 포트폴리오 입력 UI
-3. 데이터 수집 파이프라인 (뉴스 + 주가)
-4. LLM 브리핑 생성 로직
-5. 브리핑 카드 UI (모바일 최적화)
-6. 배포
+### Phase 1: 브리핑 MVP + 페르소나 + 공시 수집 ✅ (댓글만 남음)
+1. ✅ 프로젝트 셋업 (Next.js 16 + Tailwind 4 + Supabase + Vercel)
+2. ✅ 포트폴리오 입력 UI
+3. ✅ 투자자 페르소나 온보딩 (8개 특성 슬라이더)
+4. ✅ Finnhub 데이터 파이프라인 (1,000종목 Tier 시스템)
+5. ✅ SEC EDGAR 공시 수집 + AI 요약
+6. ✅ LLM 브리핑 생성 (통합 프롬프트 + 모델 fallback)
+7. ✅ 브리핑 카드 UI + 공시 표시
+8. ✅ 배포
+9. ⏳ 카드별 댓글 (Pool 3)
 
-### Phase 2: 공시 해석기
-7. SEC EDGAR 데이터 수집
-8. 공시 파싱 + RAG 파이프라인
-9. 공시 해석 UI
-10. 전분기 비교 기능
+### Phase 2: 공시 RAG + 데이터 확장 + 댓글 고도화
+→ 공시 파싱 RAG, 전분기 비교, 경제 캘린더, 소셜 센티먼트, 댓글 고도화
 
-### Phase 3: Q&A 채팅
-11. 채팅 UI (스트리밍)
-12. 멀티소스 RAG (공시 + 뉴스 + 어닝콜)
-13. 출처 인용 시스템
-14. 가드레일 (투자조언 금지, 할루시네이션 방지)
+### Phase 3: 크로스풀 인사이트 + 풀 론칭
+→ 크로스풀 연결, 정보 검증 엔진, 뉴스 감성 분석
+
+### Phase 4: AI Q&A 챗봇 — TBD
 
 ---
 

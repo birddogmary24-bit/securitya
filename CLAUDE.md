@@ -20,7 +20,7 @@ kakaopaysecurity/
 |------|------|
 | 프론트엔드 | Next.js 16 + Tailwind CSS 4 |
 | 백엔드 API | Next.js API Routes |
-| AI/LLM | Gemini 1.5 Flash (Google AI Studio) |
+| AI/LLM | Gemini 2.5 Flash / 2.5 Flash-Lite (Google AI Studio, Tier 1) |
 | 데이터 수집 | Finnhub API (Free, 60 req/min) — Vercel Cron 배치 |
 | 공시 수집 | SEC EDGAR API (무료, rate limit 주의) |
 | DB | Supabase (PostgreSQL) — 12개 테이블 (상세: `docs/DATA-CATALOG.md`) |
@@ -41,7 +41,7 @@ kakaopaysecurity/
 ## 환경 변수 (Vercel Production)
 
 ```
-GEMINI_API_KEY=              # Gemini 1.5 Flash (Google AI Studio)
+GEMINI_API_KEY=              # Gemini 2.5 Flash/Lite (Google AI Studio, Tier 1)
 NEXT_PUBLIC_SUPABASE_URL=    # Supabase 프로젝트 URL
 SUPABASE_SERVICE_ROLE_KEY=   # Supabase 서버 사이드 키 (secret)
 CRON_SECRET=                 # Cron 엔드포인트 인증 키
@@ -81,7 +81,8 @@ sec_filings: ticker, cik, filing_type, filed_date, title, accession_number(UNIQU
 | `/api/filings` | GET | SEC 공시 조회 (?tickers=AAPL,MSFT) |
 | `/api/cron/finnhub-collect` | GET | Finnhub 데이터 배치 수집 (25종목/호출, 청크 방식) |
 | `/api/cron/sec-collect` | GET | SEC EDGAR 공시 수집 |
-| `/api/cron/collect-data` | GET | 레거시 데이터 수집 (초기 mock용) |
+| `/api/filings/summarize` | POST | AI 공시 한국어 요약 (모델 fallback 체인) |
+| `/api/cron/collect-data` | GET | 레거시 데이터 수집 (finnhub-collect 리다이렉트) |
 
 ## CI/CD
 

@@ -84,20 +84,42 @@ A사 앱
 ## 7. 기술 아키텍처
 
 ```
-[투자자 페르소나 엔진]
-  8가지 특성 × 1~5점 → 개인화 기준 → 판단 엔진
+[투자자 페르소나 엔진] ✅ 구현완료
+  8가지 특성 × 1~5점 → Supabase user_personas → LLM 프롬프트 주입
+  포트폴리오 저장 → 페르소나 미설정 시 온보딩 리다이렉트
 
-[데이터 수집 — 3가지 정보 풀]
-  Pool 1: SEC EDGAR / Finnhub / 경제캘린더
-  Pool 2: NewsAPI / Reddit API / X API / 소비자 리뷰
-  Pool 3: 구조화된 커뮤니티 (AI 큐레이션 게시글 + 사용자 댓글)
-      ↓
-[데이터 처리] 청킹 → 임베딩 → Vector DB (Pinecone/ChromaDB)
-      ↓
-[AI 분석] Claude API + RAG + 페르소나 판단 엔진
-  → 포트폴리오 매칭 → 보완적 관점 생성 → 인사이트 생성
-      ↓
-[프론트엔드] Next.js + Tailwind (모바일 웹뷰 375px)
+[데이터 수집 — Pool 1: 공식 데이터] ✅ 구현완료
+  Finnhub API (Free 60 req/min)
+    → 1,000종목 3단계 Tier 시스템
+    → Tier 1 (50종목): 주가 + 뉴스 + 재무 + 애널리스트 + 목표가 + 내부자거래
+    → Tier 2 (200종목): 주가 + 뉴스
+    → Tier 3 (750종목): 주가만
+    → Vercel Cron 09:00 KST, 25종목/호출 청크 배치 (batch_state 추적)
+  SEC EDGAR API
+    → 10-K / 10-Q / 8-K 자동 수집 (90일 이내)
+    → CIK 매핑 + 별도 Cron 10:00 KST
+
+[데이터 수집 — Pool 2: 공개 정보] 🔄 부분 구현
+  ✅ Finnhub 뉴스 (기업 + 일반 시장)
+  ⏳ Reddit/X 소셜 센티먼트 (Phase 2)
+  ⏳ 경제 캘린더 (Phase 2)
+
+[데이터 수집 — Pool 3: 집단 지성] ⏳ 미구현
+  ⏳ AI 큐레이션 정보 기반 댓글·토론 시스템
+
+[데이터 저장] ✅ 구현완료
+  Supabase (PostgreSQL) — 12개 테이블
+  상세: docs/DATA-CATALOG.md
+
+[AI 분석] ✅ 구현완료
+  Gemini 2.5 Flash/Lite + 4단계 모델 fallback 체인 (Google AI Studio Tier 1)
+    → 브리핑: 포트폴리오 + 페르소나 + 공시 + 재무 + 애널리스트 + 목표가 + 등급변경 + 어닝일정
+    → 공시 요약: SEC 원문 fetch → AI 한국어 요약 (하루 5회 제한)
+
+[프론트엔드] ✅ 구현완료
+  Next.js 16 + Tailwind CSS 4 (모바일 375px)
+  4탭: 브리핑 / 포트폴리오 / 공시 / 투자성향
+  배포: Vercel (securitya.vercel.app)
 ```
 
 ## 8. 검증 지표
@@ -134,10 +156,13 @@ A사 앱
 | Finnhub 데이터 파이프라인 | ✅ | 1,000종목 3단계 Tier, Vercel Cron 청크 배치, 9개 DB 테이블 | 03-22 |
 | SEC EDGAR 공시 수집 | ✅ | 10-K/10-Q/8-K 자동 수집, CIK 매핑, 별도 Cron | 03-22 |
 | 공시 목록 UI | ✅ | `/filings` 페이지, 유형 필터(10-K/Q/8-K), 종목별 그룹핑 | 03-22 |
-| LLM 브리핑 생성 | ✅ | Gemini 1.5 Flash, 페르소나+공시+재무+애널리스트+목표가+어닝일정 통합 프롬프트 | 03-22 |
+| LLM 브리핑 생성 | ✅ | Gemini 2.5 Flash (fallback 체인), 페르소나+공시+재무+애널리스트+목표가+어닝일정 통합 프롬프트 | 03-22 |
+| AI 공시 요약 | ✅ | `/api/filings/summarize` — SEC 원문 → AI 한국어 요약, 하루 5회 제한 | 03-22 |
+| 모델 fallback 체인 | ✅ | 429/404 자동 대응: 2.5-flash → 2.5-flash-lite → 2.0-flash → 2.0-flash-lite | 03-22 |
 | 브리핑 카드 UI | ✅ | 컬러코딩 + 공시 표시 + 뉴스 | 03-22 |
 | BottomNav | ✅ | 브리핑 / 포트폴리오 / 공시 / 투자성향 4탭 | 03-22 |
 | 배포 | ✅ | Vercel `securitya.vercel.app` | 03-21 |
+| Google AI Studio Tier 1 | ✅ | 유료 전환 (~$6/월 예상) | 03-22 |
 | **카드별 댓글 (Pool 3)** | ⏳ | 미구현 — Phase 1 남은 작업 | — |
 | **보완적 관점 엔진** | ⏳ | 미구현 — Phase 2 예정 | — |
 
@@ -151,3 +176,4 @@ A사 앱
 | 2026-03-22 | 오후 | Finnhub 1,000종목 데이터 파이프라인 구현 (Tier 시스템 + 청크 배치) |
 | 2026-03-22 | 저녁 | SEC EDGAR 공시 수집 + 공시 UI + 브리핑 프롬프트 통합 |
 | 2026-03-22 | 23:30 | 구현 현황 섹션 추가, 전체 문서 최신화 |
+| 2026-03-22 | 밤 | AI 공시 요약 기능, 모델 fallback 체인, Tier 1 전환 반영 |

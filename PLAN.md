@@ -42,9 +42,11 @@
    - ✅ 별도 Cron 엔드포인트 (`/api/cron/sec-collect`)
    - ✅ 보유종목 관련 공시 → 브리핑 프롬프트에 자동 반영
    - ✅ 공시 목록 UI (`/filings` 페이지 + 유형 필터)
+   - ✅ AI 공시 한국어 요약 (`/api/filings/summarize` + 모델 fallback 체인)
+   - ✅ 하루 5회 요약 제한 (localStorage 카운터)
 
 6. **LLM 브리핑 생성** ✅ (강화 2026-03-22)
-   - ✅ Gemini 1.5 Flash 연동 (`@google/generative-ai`)
+   - ✅ Gemini 2.5 Flash/Lite 연동 + 4단계 모델 fallback 체인
    - ✅ 포트폴리오 기반 개인화 프롬프트
    - ✅ 선제적 제안 생성
    - ✅ 페르소나 프롬프트 주입 (`buildPersonaPrompt`)
