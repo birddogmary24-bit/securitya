@@ -1,6 +1,6 @@
 # AI 미국주식 브리핑 서비스 — 세션 작업 로그
 
-> **최종 업데이트:** 2026-03-22 (10차 세션)
+> **최종 업데이트:** 2026-03-22 (13차 세션)
 >
 > 새 세션 시작 시 이 파일을 먼저 읽고 시작할 것.
 > 작업 완료 후 이 파일에 내용을 추가할 것.
@@ -507,6 +507,158 @@ PLAN.md의 Phase 2 항목(9~15번)이 너무 간략했던 것을 proposal-detail
 
 ### 다음 세션 시작 전 확인 사항
 
-- [ ] Supabase에서 `004_briefing_cache.sql` 실행 (9차 세션 잔여)
-- [ ] 캐시 동작 확인 (9차 세션 잔여)
+- [x] Supabase에서 `004_briefing_cache.sql` 실행 (9차 세션 잔여) ← 11차 세션 완료
+- [x] 캐시 동작 확인 (9차 세션 잔여) ← 종목별 캐시로 대체 (12차 세션)
 - [ ] Phase 2 구현 시작 시 우선순위 결정 (9~15번 중 어디부터)
+
+---
+
+## 2026-03-22 | 11차 세션 — 550종목 확장, GitHub Actions 마이그레이션, Tier 3 On-demand, 성능 최적화
+
+### 작업 요약
+종목 550개로 확장 (Tier 1: 50 + Tier 2: 500 → 이후 12차에서 재설계). GitHub Actions로 Cron 마이그레이션 (Vercel Hobby 10초 timeout 우회). Tier 3 On-demand 수집 기능 구현. 브리핑 API 병렬 쿼리 성능 최적화.
+
+### 주요 작업
+
+| # | 작업 | 내용 |
+|---|------|------|
+| 1 | 550종목 확장 | `stock-tiers.ts` — Tier 1 (50) + Tier 2 (500)으로 확장 |
+| 2 | GitHub Actions 마이그레이션 | `.github/workflows/cron-finnhub.yml`, `cron-sec.yml` — Vercel Cron API 호출 → GitHub Actions 내 직접 실행 |
+| 3 | Vercel timeout 우회 | `collect-finnhub.ts`, `collect-sec.ts` — ts-node로 GitHub Actions 내 직접 실행하는 독립 스크립트 |
+| 4 | Tier 3 On-demand | `tier3-ondemand.ts` — 미등록 종목 검색 시 Finnhub 즉시 수집 + DB 캐싱 (24h TTL) |
+| 5 | 종목 검색 API | `/api/stocks/search` — Tier 1/2 로컬 검색 + Finnhub On-demand fallback |
+| 6 | PortfolioForm 확장 | 포트폴리오 종목 검색을 전체 550종목 대상으로 확장 |
+| 7 | 브리핑 병렬 쿼리 | `fetchMarketData` 내 Supabase 쿼리 병렬화 (`Promise.all`) + 타이밍 로그 |
+| 8 | Vercel Cron 제거 | `vercel.json`에서 cron 설정 제거 (GitHub Actions로 완전 이전) |
+| 9 | stock-list.md 확장 | 550종목 전체 리스트 문서화 |
+| 10 | Tier 3 배치 연동 | 활성 On-demand 종목 (7일 이내 접근)을 배치 수집에 포함 |
+
+### 신규 파일
+
+| 파일 | 역할 |
+|------|------|
+| `app/scripts/collect-finnhub.ts` | Finnhub 배치 수집 스크립트 (GitHub Actions용) |
+| `app/scripts/collect-sec.ts` | SEC 배치 수집 스크립트 (GitHub Actions용) |
+| `app/src/lib/tier3-ondemand.ts` | Tier 3 On-demand 수집 + DB 캐싱 |
+| `app/src/app/api/stocks/search/route.ts` | 종목 검색 API |
+| `.github/workflows/cron-finnhub.yml` | Finnhub Cron (GitHub Actions) |
+| `.github/workflows/cron-sec.yml` | SEC Cron (GitHub Actions) |
+
+### GitHub Actions Cron 스케줄
+
+| 워크플로우 | UTC | KST | 설명 |
+|-----------|-----|-----|------|
+| `cron-finnhub.yml` | 21:00 | 06:00 | Finnhub 수집 (→ 12차에서 06:30으로 변경) |
+| `cron-sec.yml` | 22:00 | 07:00 | SEC EDGAR 수집 (→ 12차에서 07:30으로 변경) |
+
+### 다음 세션 시작 전 확인 사항
+
+- [x] GitHub Actions Cron 실행 결과 확인
+- [x] On-demand 수집 동작 확인
+- [x] Tier 재설계 검토 (ETF 분리, Tier 2 축소)
+
+---
+
+## 2026-03-22 | 12차 세션 — Tier 재설계 (ETF 분리), 종목별 AI 분석 캐시, Cron 타이밍 변경
+
+### 작업 요약
+3-Tier 종목 구조 재설계 (ETF 분리 + Tier 2 100종목으로 축소). Cron 타이밍을 06:30/07:30 KST로 변경. 종목별 AI 분석 사전 생성 캐시 구현 (`stock_analysis_cache` + `market_overview_cache`). 브리핑 API를 캐시 조합 방식으로 전면 리팩터링.
+
+### 배경/문제
+- 기존 1,000종목은 API 호출량 과다 + ETF에 재무데이터 수집 불필요
+- briefing_cache는 포트폴리오+페르소나 조합별 → 캐시 히트율 낮음
+- Cron 09:00 KST는 출근 후 → 출근 전 07:00에 브리핑 확인 불가
+
+### 주요 작업
+
+| # | 작업 | 내용 |
+|---|------|------|
+| 1 | Tier 구조 재설계 | `stock-tiers.ts` — Tier 1 (50) + Tier 2 (100 개별주식) + Tier 3 (~400 개별주식+ETF). `isEtf` 플래그 도입 |
+| 2 | Finnhub 수집 스크립트 업데이트 | `collect-finnhub.ts` — Tier 1+2 개별주식 전체수집, Tier 3는 quote+news만 |
+| 3 | SEC 수집 스크립트 업데이트 | `collect-sec.ts` — `isEtf` 종목 SEC 수집 제외 |
+| 4 | Cron 타이밍 변경 | Finnhub: 06:30 KST (UTC 21:30), SEC: 07:30 KST (UTC 22:30) |
+| 5 | stock_analysis_cache 테이블 | `005_stock_analysis_cache.sql` — ticker+analysis_date PK, sentiment/summary/key_points/proactive_suggestion |
+| 6 | market_overview_cache 테이블 | 같은 마이그레이션 — analysis_date PK, greeting/market_overview/macro_alert |
+| 7 | AI 분석 생성 스크립트 | `generate-stock-analysis.ts` — Tier 1+2 ~150종목 AI 분석 사전 생성 (배치 2, 13초 딜레이, 10 RPM) |
+| 8 | 브리핑 API 리팩터링 | `briefing/route.ts` — 기존 실시간 Gemini 호출 → 캐시된 종목별 분석 조합으로 전면 변경 |
+| 9 | Cron 워크플로우 연결 | `cron-finnhub.yml` — collect → generate-stock-analysis 순차 실행 |
+| 10 | On-demand 업데이트 | `tier3-ondemand.ts` — managed tiers (1/2/3) 전부 스킵하도록 수정 |
+
+### 신규 파일
+
+| 파일 | 역할 |
+|------|------|
+| `supabase/migrations/005_stock_analysis_cache.sql` | stock_analysis_cache + market_overview_cache 테이블 |
+| `app/scripts/generate-stock-analysis.ts` | 종목별 AI 분석 사전 생성 스크립트 |
+
+### 수정 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/src/lib/stock-tiers.ts` | 전면 재설계: 50+100+400, isEtf 플래그, ETF 분리 |
+| `app/scripts/collect-finnhub.ts` | Tier 1+2 전체수집, Tier 3 기본수집 |
+| `app/scripts/collect-sec.ts` | isEtf 종목 제외 |
+| `.github/workflows/cron-finnhub.yml` | 06:30 KST + generate-stock-analysis 단계 추가 |
+| `.github/workflows/cron-sec.yml` | 07:30 KST |
+| `app/src/app/api/briefing/route.ts` | 캐시 조합 방식으로 전면 리팩터링 (150→417줄 축소) |
+| `app/src/lib/tier3-ondemand.ts` | managed tiers 전부 스킵 |
+
+### 종목별 AI 분석 캐시 구조
+
+```
+[Cron 06:30 KST]
+  collect-finnhub.ts (Finnhub 데이터 수집)
+    ↓
+  generate-stock-analysis.ts (AI 분석 사전 생성)
+    ├─ stock_analysis_cache (Tier 1+2 ~150종목)
+    │   ticker, analysis_date, sentiment, summary, key_points,
+    │   proactive_suggestion, related_tickers, data_freshness_key
+    └─ market_overview_cache (시장 전체 1건)
+        analysis_date, greeting, market_overview, macro_alert
+
+[브리핑 요청 시]
+  /api/briefing
+    → 포트폴리오 종목의 캐시된 분석 조회
+    → 캐시 없는 종목은 실시간 데이터로 fallback
+    → 조합하여 즉시 반환
+```
+
+### DB 현황 (Supabase, 15개 테이블)
+
+```
+기존 13개 + 신규 2개:
+  stock_analysis_cache — 종목별 AI 분석 캐시
+  market_overview_cache — 시장 전체 분석 캐시
+```
+
+### 배포 체크리스트
+
+- [x] Supabase에서 `005_stock_analysis_cache.sql` 실행 — 완료
+- [x] GitHub Secrets에 `GEMINI_API_KEY` 추가 — 완료
+- [x] main 브랜치 머지 + 푸시 → Vercel 자동 배포
+- [ ] GitHub Actions Cron 첫 실행 확인 (06:30 KST) → AI 분석 캐시 생성 확인
+- [ ] 브리핑 캐시 조합 동작 확인 (캐시 HIT 시 <1초 응답)
+- [ ] Phase 2 구현 시작 시 우선순위 결정
+
+---
+
+## 2026-03-22 | 13차 세션 — 문서 최신화 + 배포 체크리스트 완료
+
+### 작업 요약
+12차 세션에서 구현한 Tier 재설계 + 종목별 AI 캐시 + Cron 타이밍 변경의 배포 후속 작업 완료. Supabase 마이그레이션 실행, GitHub Secrets 설정, main 머지/푸시, 전체 문서 최신화 확인.
+
+### 주요 작업
+
+| # | 작업 | 내용 |
+|---|------|------|
+| 1 | Supabase 마이그레이션 실행 | `005_stock_analysis_cache.sql` — stock_analysis_cache + market_overview_cache 생성 |
+| 2 | GitHub Secrets 설정 | `GEMINI_API_KEY` 추가 (Cron AI 분석 생성용) |
+| 3 | main 머지 + 푸시 | `feat/tier-redesign-stock-analysis-cache` → main (7 commits, fast-forward) |
+| 4 | 전체 문서 최신화 확인 | PLAN, DECISIONS, TECHNICAL-ARCHITECTURE, DATA-CATALOG, DEVELOPMENT-SPEC, CLAUDE.md — 12차에서 이미 반영 완료 확인 |
+| 5 | SESSIONLOG 배포 체크리스트 | Supabase/Secrets 완료 체크, Cron 첫 실행 대기 항목 추가 |
+
+### 다음 세션 시작 전 확인 사항
+
+- [ ] GitHub Actions Cron 첫 실행 확인 (06:30 KST) → AI 분석 캐시 생성 확인
+- [ ] 브리핑 캐시 조합 동작 확인 (캐시 HIT 시 <1초 응답)
+- [ ] Phase 2 구현 시작 시 우선순위 결정
