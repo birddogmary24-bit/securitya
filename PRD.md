@@ -90,14 +90,17 @@ A사 앱
 
 [데이터 수집 — Pool 1: 공식 데이터] ✅ 구현완료
   Finnhub API (Free 60 req/min)
-    → 1,000종목 3단계 Tier 시스템
+    → 550종목 3단계 Tier 시스템 (ETF 분리)
     → Tier 1 (50종목): 주가 + 뉴스 + 재무 + 애널리스트 + 목표가 + 내부자거래
-    → Tier 2 (200종목): 주가 + 뉴스
-    → Tier 3 (750종목): 주가만
-    → Vercel Cron 09:00 KST, 25종목/호출 청크 배치 (batch_state 추적)
+    → Tier 2 (100 개별주식): 전체수집 (Tier 1과 동일)
+    → Tier 3 (~400 개별주식+ETF): 주가 + 뉴스
+    → GitHub Actions 직접 실행 (Vercel Hobby 10초 timeout 우회)
+    → Cron: 06:30 KST (Finnhub+AI분석) / 07:30 KST (SEC)
+    → Tier 3 On-demand: 미등록 종목 검색 시 즉시 수집 (24h TTL)
   SEC EDGAR API
     → 10-K / 10-Q / 8-K 자동 수집 (90일 이내)
-    → CIK 매핑 + 별도 Cron 10:00 KST
+    → CIK 매핑 + 별도 Cron 07:30 KST
+    → ETF는 SEC 수집 제외 (isEtf 플래그)
 
 [데이터 수집 — Pool 2: 공개 정보] 🔄 부분 구현
   ✅ Finnhub 뉴스 (기업 + 일반 시장)
@@ -108,12 +111,15 @@ A사 앱
   ⏳ AI 큐레이션 정보 기반 댓글·토론 시스템
 
 [데이터 저장] ✅ 구현완료
-  Supabase (PostgreSQL) — 12개 테이블
+  Supabase (PostgreSQL) — 15개 테이블
   상세: docs/DATA-CATALOG.md
 
 [AI 분석] ✅ 구현완료
   Gemini 2.5 Flash/Lite + 4단계 모델 fallback 체인 (Google AI Studio Tier 1)
-    → 브리핑: 포트폴리오 + 페르소나 + 공시 + 재무 + 애널리스트 + 목표가 + 등급변경 + 어닝일정
+    → 종목별 AI 분석 사전 생성 (Cron 06:30 KST, Tier 1+2 ~150종목)
+    → stock_analysis_cache: sentiment/summary/key_points/proactive_suggestion
+    → market_overview_cache: greeting/market_overview/macro_alert
+    → 브리핑 요청 시 캐시된 분석 조합 → 즉시 반환
     → 공시 요약: SEC 원문 fetch → AI 한국어 요약 (하루 5회 제한)
 
 [프론트엔드] ✅ 구현완료
@@ -154,16 +160,21 @@ A사 앱
 | 프로젝트 셋업 | ✅ | Next.js 16 + Tailwind 4 + Supabase + Vercel CI/CD | 03-21 |
 | 포트폴리오 입력 UI | ✅ | 종목 검색/추가/수량 조절, localStorage | 03-21 |
 | 투자자 페르소나 온보딩 | ✅ | 8개 특성 슬라이더 UI + Supabase `user_personas` + LLM 프롬프트 주입 | 03-22 |
-| Finnhub 데이터 파이프라인 | ✅ | 1,000종목 3단계 Tier, Vercel Cron 청크 배치, 9개 DB 테이블 | 03-22 |
+| Finnhub 데이터 파이프라인 | ✅ | 550종목 3단계 Tier (ETF 분리), GitHub Actions 직접 실행, 9개 DB 테이블 | 03-22 |
 | SEC EDGAR 공시 수집 | ✅ | 10-K/10-Q/8-K 자동 수집, CIK 매핑, 별도 Cron | 03-22 |
 | 공시 목록 UI | ✅ | `/filings` 페이지, 유형 필터(10-K/Q/8-K), 종목별 그룹핑 | 03-22 |
-| LLM 브리핑 생성 | ✅ | Gemini 2.5 Flash (fallback 체인), 페르소나+공시+재무+애널리스트+목표가+어닝일정 통합 프롬프트 | 03-22 |
+| LLM 브리핑 생성 | ✅ | Gemini 2.5 Flash (fallback 체인), 종목별 AI 분석 사전 생성 캐시 + 조합 방식 | 03-22 |
 | AI 공시 요약 | ✅ | `/api/filings/summarize` — SEC 원문 → AI 한국어 요약, 하루 5회 제한 | 03-22 |
 | 모델 fallback 체인 | ✅ | 429/404 자동 대응: 2.5-flash → 2.5-flash-lite → 2.0-flash → 2.0-flash-lite | 03-22 |
 | 브리핑 카드 UI | ✅ | 컬러코딩 + 공시 표시 + 뉴스 | 03-22 |
 | BottomNav | ✅ | 브리핑 / 포트폴리오 / 공시 / 투자성향 4탭 | 03-22 |
 | 배포 | ✅ | Vercel `securitya.vercel.app` | 03-21 |
 | Google AI Studio Tier 1 | ✅ | 유료 전환 (~$6/월 예상) | 03-22 |
+| Tier 재설계 (ETF 분리) | ✅ | 50+100+400 3-Tier, isEtf 플래그, On-demand 수집 | 03-22 |
+| GitHub Actions 직접 실행 | ✅ | Vercel timeout 우회, `collect-finnhub.ts`/`collect-sec.ts` 스크립트 | 03-22 |
+| 종목별 AI 분석 캐시 | ✅ | `stock_analysis_cache` + `market_overview_cache` (005 마이그레이션) | 03-22 |
+| 종목 검색 API | ✅ | `/api/stocks/search` — Tier 1/2 로컬 + Tier 3 On-demand | 03-22 |
+| Cron 타이밍 조정 | ✅ | 06:30 KST (Finnhub+AI분석) / 07:30 KST (SEC) | 03-22 |
 | **카드별 댓글 (Pool 3)** | ⏳ | 미구현 — Phase 2 예정 | — |
 | **보완적 관점 엔진** | ⏳ | 미구현 — Phase 2 예정 | — |
 
@@ -179,3 +190,4 @@ A사 앱
 | 2026-03-22 | 23:30 | 구현 현황 섹션 추가, 전체 문서 최신화 |
 | 2026-03-22 | 밤 | AI 공시 요약 기능, 모델 fallback 체인, Tier 1 전환 반영 |
 | 2026-03-23 | 00:30 | Phase 1 완료 확정, 댓글 기능 Phase 2로 이동, 구현 리스트 정리 |
+| 2026-03-22 | — | 550→Tier 재설계, GitHub Actions 직접 실행, 종목별 AI 분석 캐시, 06:30 KST Cron |

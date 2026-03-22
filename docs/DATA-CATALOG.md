@@ -2,7 +2,7 @@
 
 > **최종 업데이트:** 2026-03-22
 > **DB:** Supabase (PostgreSQL)
-> **총 테이블:** 12개 (전체 적용 완료)
+> **총 테이블:** 15개 (전체 적용 완료)
 
 ## 테이블 요약
 
@@ -20,6 +20,9 @@
 | 10 | `earnings_calendar` | 실적 발표 일정 | id (identity) | Finnhub | 배치 |
 | 11 | `batch_state` | 배치 작업 상태 관리 | id (identity) | 시스템 내부 | 배치 실행 시 |
 | 12 | `sec_filings` | SEC 공시 | uuid | SEC EDGAR | 별도 cron |
+| 13 | `briefing_cache` | AI 브리핑 캐시 (레거시) | uuid | 시스템 내부 | 브리핑 생성 시 |
+| 14 | `stock_analysis_cache` | 종목별 AI 분석 캐시 | ticker+analysis_date | AI 생성 (Cron) | 매일 06:30 KST |
+| 15 | `market_overview_cache` | 시장 전체 분석 캐시 | analysis_date | AI 생성 (Cron) | 매일 06:30 KST |
 
 ## 상세 스키마
 
@@ -271,6 +274,68 @@
 
 ---
 
+### 13. briefing_cache (레거시 — 종목별 캐시로 대체)
+> AI 브리핑 결과 캐시 (동일 데이터 기간 내 Gemini 재호출 방지)
+
+| 컬럼 | 타입 | 제약조건 | 설명 |
+|------|------|---------|------|
+| id | uuid | PK, DEFAULT gen_random_uuid() | |
+| cache_key | text | UNIQUE, NOT NULL | 포트폴리오+페르소나 SHA256 해시 (32자) |
+| briefing_data | jsonb | NOT NULL | DailyBriefing 전체 JSON |
+| data_freshness_key | text | NOT NULL | 데이터 갱신 시점 해시 (무효화 판단용) |
+| created_at | timestamptz | DEFAULT NOW() | 캐시 생성 시각 |
+| expires_at | timestamptz | DEFAULT NOW() + 24h | 만료 시각 |
+
+- **인덱스:** `idx_briefing_cache_key` (cache_key), `idx_briefing_cache_expires` (expires_at)
+- **RLS:** 전체 허용 (서비스 역할)
+- **마이그레이션:** `supabase/migrations/004_briefing_cache.sql`
+- **TTL:** 24시간, 3일 이상 만료 캐시 자동 삭제
+- **무효화:** data_freshness_key 변경 시 (DB 데이터 갱신) 또는 forceRefresh 요청 시
+
+---
+
+### 14. stock_analysis_cache
+> 종목별 AI 분석 사전 생성 캐시 (Cron에서 Tier 1+2 종목 대상 생성)
+
+| 컬럼 | 타입 | 제약조건 | 설명 |
+|------|------|---------|------|
+| ticker | text | NOT NULL, PK(1) | 종목 코드 |
+| analysis_date | date | NOT NULL, PK(2) | 분석 날짜 |
+| sentiment | text | NOT NULL, CHECK (positive/negative/neutral) | 종목 감성 |
+| summary | text | NOT NULL | AI 분석 요약 |
+| key_points | jsonb | NOT NULL | 핵심 포인트 배열 |
+| proactive_suggestion | text | | 선제적 제안 |
+| related_tickers | jsonb | | 관련 종목 배열 |
+| data_freshness_key | text | NOT NULL | 데이터 신선도 해시 (변경 감지) |
+| generated_at | timestamptz | DEFAULT NOW() | 생성 시각 |
+
+- **PK:** `(ticker, analysis_date)`
+- **인덱스:** `idx_stock_analysis_date` (analysis_date), `idx_stock_analysis_generated` (generated_at)
+- **RLS:** 전체 허용 (서비스 역할)
+- **마이그레이션:** `supabase/migrations/005_stock_analysis_cache.sql`
+- **생성 스크립트:** `app/scripts/generate-stock-analysis.ts`
+- **TTL:** 3일 이상 된 분석 자동 삭제
+
+---
+
+### 15. market_overview_cache
+> 시장 전체 분석 캐시 (인사말, 시장 개요, 매크로 알림)
+
+| 컬럼 | 타입 | 제약조건 | 설명 |
+|------|------|---------|------|
+| analysis_date | date | PK | 분석 날짜 |
+| greeting | text | NOT NULL | 인사말 (시간대별) |
+| market_overview | text | NOT NULL | 시장 전체 개요 |
+| macro_alert | text | | 매크로 경제 알림 |
+| data_freshness_key | text | NOT NULL | 데이터 신선도 해시 |
+| generated_at | timestamptz | DEFAULT NOW() | 생성 시각 |
+
+- **PK:** `analysis_date`
+- **RLS:** 전체 허용 (서비스 역할)
+- **마이그레이션:** `supabase/migrations/005_stock_analysis_cache.sql`
+
+---
+
 ## 테이블 관계 다이어그램
 
 ```
@@ -282,11 +347,17 @@ stock_profiles (ticker) ─┬─ stock_quotes (ticker)
                          ├─ stock_insider_transactions (ticker)
                          ├─ earnings_calendar (ticker)
                          ├─ stock_news (tickers[])
-                         └─ sec_filings (ticker)
+                         ├─ sec_filings (ticker)
+                         └─ stock_analysis_cache (ticker) ✨
 
 user_personas (user_id) ─── 사용자별 독립
 
 batch_state ─── 시스템 내부 관리용
+
+briefing_cache ─── 레거시 브리핑 캐시 (종목별 캐시로 대체)
+
+stock_analysis_cache (ticker, analysis_date) ─── 종목별 AI 분석 ✨
+market_overview_cache (analysis_date) ─── 시장 전체 분석 ✨
 ```
 
 > **참고:** FK(외래키) 제약조건은 설정되어 있지 않으며, `ticker` 컬럼을 통해 논리적으로 연결됨.
@@ -298,13 +369,16 @@ batch_state ─── 시스템 내부 관리용
 | `supabase/migrations/002_user_personas.sql` | user_personas 생성 |
 | `supabase/migrations/003_finnhub_tables.sql` | Finnhub 관련 9개 테이블 + stock_quotes/news ALTER |
 | `app/src/lib/sec-edgar.sql` | sec_filings 생성 (수동 실행) |
+| `supabase/migrations/004_briefing_cache.sql` | briefing_cache 생성 (레거시) |
+| `supabase/migrations/005_stock_analysis_cache.sql` | stock_analysis_cache + market_overview_cache 생성 |
 
 ## API 연결
 
 | API 엔드포인트 | 사용 테이블 |
 |---------------|------------|
 | `POST/GET /api/persona` | user_personas |
-| `POST /api/briefing` | stock_quotes, stock_news, sec_filings, stock_financials, stock_recommendations, stock_price_targets, stock_upgrades, earnings_calendar |
+| `POST /api/briefing` | stock_analysis_cache, market_overview_cache, stock_quotes, stock_news, sec_filings, stock_financials, stock_recommendations, stock_price_targets, stock_upgrades, earnings_calendar |
+| `GET /api/stocks/search` | stock_profiles |
 | `GET /api/filings` | sec_filings |
 | `GET /api/cron/finnhub-collect` | stock_profiles, stock_quotes, stock_news, stock_financials, stock_recommendations, stock_price_targets, stock_upgrades, stock_insider_transactions, earnings_calendar, batch_state |
 | `GET /api/cron/sec-collect` | sec_filings |

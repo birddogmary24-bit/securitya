@@ -27,14 +27,19 @@
    - ✅ BottomNav에 "투자성향" 탭 추가
 
 4. **데이터 수집 파이프라인** ✅ (2026-03-22)
-   - ✅ Supabase DB + Vercel Cron 구조 완성
+   - ✅ Supabase DB + Cron 구조 완성
    - ✅ mock-data.ts → DB 저장 흐름 구현
-   - ✅ Finnhub API 연동 — 1,000종목 3단계 Tier 시스템
+   - ✅ Finnhub API 연동 — 550종목 3단계 Tier 시스템 (ETF 분리)
      - Tier 1 (50종목): 주가 + 뉴스 + 재무 + 애널리스트 + 목표가 + 내부자거래
-     - Tier 2 (200종목): 주가 + 뉴스
-     - Tier 3 (750종목): 주가만
-   - ✅ Vercel Cron 청크 배치 (25종목/호출, batch_state 추적)
+     - Tier 2 (100 개별주식): 주가 + 뉴스 + 재무 + 애널리스트 + 목표가 + 내부자거래
+     - Tier 3 (~400 개별주식+ETF): 주가 + 뉴스
+   - ✅ GitHub Actions 직접 실행 (Vercel Hobby 10초 timeout 우회)
+     - `collect-finnhub.ts` — Finnhub 수집 스크립트
+     - `collect-sec.ts` — SEC 수집 스크립트
+   - ✅ Cron: 06:30 KST (Finnhub+AI분석) / 07:30 KST (SEC)
    - ✅ 9개 신규 Supabase 테이블 생성 (`003_finnhub_tables.sql`)
+   - ✅ Tier 3 On-demand 수집 (`tier3-ondemand.ts`, 24h TTL)
+   - ✅ 종목 검색 API (`/api/stocks/search`)
 
 5. **SEC EDGAR 데이터 수집** ✅ (2026-03-22)
    - ✅ 10-K / 10-Q / 8-K 원문 자동 수집 (`sec-edgar.ts`)
@@ -51,7 +56,12 @@
    - ✅ 선제적 제안 생성
    - ✅ 페르소나 프롬프트 주입 (`buildPersonaPrompt`)
    - ✅ SEC 공시 + 재무지표 + 애널리스트 의견 + 목표가 + 등급변경 + 어닝일정 프롬프트 통합
-   - ✅ 브리핑 캐시 시스템 (Supabase `briefing_cache`, 데이터 신선도 기반 무효화, 24h TTL)
+   - ✅ 종목별 AI 분석 사전 생성 캐시 (`stock_analysis_cache` + `market_overview_cache`)
+     - Cron에서 Finnhub 수집 직후 Tier 1+2 ~150종목 AI 분석 자동 생성
+     - `generate-stock-analysis.ts` — Gemini 2.5 Flash (배치 2종목, 13초 딜레이, 10 RPM 준수)
+     - 브리핑 요청 시 캐시된 종목별 분석을 조합하여 즉시 반환
+     - data_freshness_key 기반 재생성 스킵 (데이터 미변경 시)
+   - ✅ 레거시 briefing_cache (요청별 전체 캐시, 24h TTL) — 종목별 캐시로 대체
    - ⏳ 보완적 관점 판단 엔진 (Phase 2 예정)
 
 7. **브리핑 카드 UI** ✅ (강화 2026-03-22)
@@ -137,7 +147,7 @@
 
 | Phase | 상태 | 비고 |
 |-------|------|------|
-| Phase 1 | ✅ 완료 | 페르소나/Finnhub/SEC EDGAR/브리핑/배포 완료 |
+| Phase 1 | ✅ 완료 | 페르소나/Finnhub/SEC EDGAR/브리핑/종목별캐시/배포 완료 |
 | Phase 2 | ⏳ 미시작 | 공시 RAG + 경제 캘린더 + 소셜 센티먼트 + 댓글 고도화 |
 | Phase 3 | ⏳ 미시작 | 크로스풀 인사이트 |
 | Phase 4 | ⏳ 미시작 | AI Q&A 챗봇 (TBD) |

@@ -66,29 +66,33 @@ A사 앱
 | 영역 | 기술 | 상태 |
 |------|------|------|
 | **프론트엔드** | Next.js 16 + Tailwind CSS 4 | ✅ 모바일 375px 최적화 |
-| **백엔드 API** | Next.js API Routes | ✅ 6개 엔드포인트 |
-| **AI/LLM** | Gemini 1.5 Flash (Google AI Studio) | ✅ 통합 프롬프트 (페르소나+공시+재무+애널리스트) |
-| **데이터 수집** | Finnhub API (Free 60 req/min) | ✅ 1,000종목 Tier 시스템 |
+| **백엔드 API** | Next.js API Routes | ✅ 8개 엔드포인트 |
+| **AI/LLM** | Gemini 2.5 Flash/Lite (Google AI Studio Tier 1) | ✅ 4단계 fallback 체인 + 종목별 AI 분석 사전 생성 |
+| **데이터 수집** | Finnhub API (Free 60 req/min) | ✅ 550종목 3-Tier 시스템 (ETF 분리) |
 | **공시 수집** | SEC EDGAR API | ✅ 10-K/10-Q/8-K 자동 수집 |
 | **벡터 DB** | Pinecone 또는 ChromaDB | ⏳ Phase 2 (공시 RAG 파이프라인) |
 | **배포** | Vercel (Hobby, CI/CD) | ✅ securitya.vercel.app |
-| **DB** | Supabase (PostgreSQL) — 12개 테이블 | ✅ DATA-CATALOG.md 참조 |
-| **Cron** | Vercel Cron (2개) | ✅ Finnhub 09:00 KST / SEC 10:00 KST |
+| **DB** | Supabase (PostgreSQL) — 15개 테이블 | ✅ DATA-CATALOG.md 참조 |
+| **Cron** | GitHub Actions (2개 워크플로우) | ✅ Finnhub+AI분석 06:30 KST / SEC 07:30 KST |
 
 ---
 
 ## 데이터 파이프라인 (구현 완료)
 
 ```
-[Vercel Cron — 매일 자동 실행]
-  ├─ 09:00 KST: Finnhub 배치 수집 (/api/cron/finnhub-collect) ✅
-  │   └─ 1,000종목 × 3단계 Tier, 25종목/호출 청크, batch_state 추적
-  └─ 10:00 KST: SEC EDGAR 수집 (/api/cron/sec-collect) ✅
-      └─ CIK 매핑 → 10-K/10-Q/8-K 90일 내 수집
+[GitHub Actions Cron — 매일 자동 실행]
+  ├─ 06:30 KST: Finnhub 배치 수집 (collect-finnhub.ts) ✅
+  │   ├─ 550종목 × 3-Tier (ETF 분리), Supabase 직접 저장
+  │   └─ → AI 분석 사전 생성 (generate-stock-analysis.ts) ✅
+  │       ├─ Tier 1+2 ~150종목 종목별 AI 분석
+  │       ├─ stock_analysis_cache 저장
+  │       └─ market_overview_cache 저장
+  └─ 07:30 KST: SEC EDGAR 수집 (collect-sec.ts) ✅
+      └─ CIK 매핑 → 10-K/10-Q/8-K 90일 내 (ETF 제외)
 
          ↓
 
-[Supabase (PostgreSQL) — 12개 테이블] ✅
+[Supabase (PostgreSQL) — 15개 테이블] ✅
   ├─ stock_quotes — 주가 (Tier 1/2/3 전체)
   ├─ stock_news — 기업별 + 일반 시장 뉴스
   ├─ stock_financials — PER, PBR, 배당, 52주 고저
@@ -100,16 +104,21 @@ A사 앱
   ├─ sec_filings — SEC 공시 (10-K/Q/8-K)
   ├─ user_personas — 투자자 페르소나 (8개 특성)
   ├─ stock_profiles — 기업 프로필
-  └─ batch_state — Cron 배치 진행 추적
+  ├─ batch_state — Cron 배치 진행 추적
+  ├─ briefing_cache — 레거시 브리핑 캐시 (종목별 캐시로 대체)
+  ├─ stock_analysis_cache — 종목별 AI 분석 캐시 ✨
+  └─ market_overview_cache — 시장 전체 분석 캐시 ✨
 
          ↓
 
 [AI 분석 엔진] ✅
   Gemini (fallback 체인: 2.5-flash → 2.5-flash-lite → 2.0-flash → 2.0-flash-lite)
-  ├─ 포트폴리오 + 페르소나 기반 개인화 브리핑
-  ├─ 공시 + 재무 + 애널리스트 + 목표가 + 등급변경 + 어닝일정 통합 프롬프트
-  ├─ SEC 공시 AI 한국어 요약
-  └─ 선제적 제안 생성
+  ├─ 종목별 AI 분석 사전 생성 (Cron 06:30 KST)
+  │   ├─ sentiment / summary / key_points / proactive_suggestion
+  │   └─ data_freshness_key 기반 재생성 스킵
+  ├─ 브리핑 요청 시 캐시된 분석 조합 → 즉시 반환
+  ├─ SEC 공시 AI 한국어 요약 (하루 5회 제한)
+  └─ 캐시 miss 종목: 실시간 데이터로 fallback
 
          ↓
 
@@ -126,12 +135,13 @@ A사 앱
 
 | 메서드 | 경로 | 설명 | 상태 |
 |--------|------|------|------|
-| POST | `/api/briefing` | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 (공시/재무/애널리스트 통합) | ✅ |
+| POST | `/api/briefing` | 포트폴리오 기반 AI 브리핑 (종목별 캐시 조합, forceRefresh 옵션) | ✅ |
 | POST/GET | `/api/persona` | 투자자 페르소나 저장/조회 | ✅ |
 | GET | `/api/filings?tickers=` | SEC 공시 조회 (종목별 필터) | ✅ |
 | POST | `/api/filings/summarize` | AI 공시 한국어 요약 (모델 fallback 체인) | ✅ |
-| GET | `/api/cron/finnhub-collect` | Finnhub 1,000종목 배치 수집 (청크 방식) | ✅ |
-| GET | `/api/cron/sec-collect` | SEC EDGAR 공시 수집 | ✅ |
+| GET | `/api/stocks/search?q=` | 종목 검색 (Tier 1/2 로컬 + Tier 3 On-demand) | ✅ |
+| GET | `/api/cron/finnhub-collect` | Finnhub 배치 수집 (레거시, GitHub Actions로 대체) | ✅ |
+| GET | `/api/cron/sec-collect` | SEC EDGAR 공시 수집 (레거시, GitHub Actions로 대체) | ✅ |
 | GET | `/api/cron/collect-data` | 레거시 (finnhub-collect 리다이렉트) | ✅ |
 
 ---
@@ -142,7 +152,7 @@ A사 앱
 1. ✅ 프로젝트 셋업 (Next.js 16 + Tailwind 4 + Supabase + Vercel)
 2. ✅ 포트폴리오 입력 UI
 3. ✅ 투자자 페르소나 온보딩 (8개 특성 슬라이더)
-4. ✅ Finnhub 데이터 파이프라인 (1,000종목 Tier 시스템)
+4. ✅ Finnhub 데이터 파이프라인 (550종목 3-Tier, ETF 분리, GitHub Actions)
 5. ✅ SEC EDGAR 공시 수집 + AI 요약
 6. ✅ LLM 브리핑 생성 (통합 프롬프트 + 모델 fallback)
 7. ✅ 브리핑 카드 UI + 공시 표시

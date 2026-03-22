@@ -1,7 +1,18 @@
 # 서비스 종목 리스트 (550종목)
 
 > 생성일: 2026-03-22
-> Tier 2 확장: 2026-03-22
+> Tier 재설계: 2026-03-22 (ETF 분리, Tier 2 100종목으로 축소)
+
+## 종목 등급 시스템
+
+| 등급 | 종목 수 | 수집 범위 | 비고 |
+|------|---------|----------|------|
+| **Tier 1** | 50 | 전체수집 (quote+news+financials+recommendations+targets+insider+earnings) | 한국인 투자자 최인기 종목 |
+| **Tier 2** | 100 (개별주식) | 전체수집 (Tier 1과 동일) | ETF 제외 |
+| **Tier 3** | ~400 (개별주식+ETF) | quote + news | `isEtf` 플래그로 ETF 분리 |
+| **On-demand** | 가변 | Finnhub 즉시 수집 (24h TTL) | 사용자 검색 시 자동 생성 |
+
+> ETF는 재무데이터/SEC 공시 구조가 개별주식과 다르므로 Tier 3에 배치하여 quote+news만 수집.
 
 ## Tier 1 — 핵심 종목 (50개)
 
