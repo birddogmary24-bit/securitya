@@ -409,6 +409,7 @@ SEC EDGAR 공시 AI 한국어 요약 기능 구현. Gemini 1.5 시리즈 종료 
 
 ### 다음 세션 시작 전 확인 사항
 
-- [ ] 브리핑 카드에 댓글 기능 추가 (Phase 1 유일한 남은 작업)
+- [ ] Phase 1 완료 — 댓글은 Phase 2로 이동
+- [ ] Phase 2 시작: 카드별 댓글 기능 (Pool 3)
 - [ ] 공시 요약 품질 모니터링
 - [ ] proposal-executive-summary / proposal-detailed 구현 현황 반영
