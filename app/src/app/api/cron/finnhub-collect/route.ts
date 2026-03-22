@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
           {
             batch_type: "daily",
             batch_date: today,
-            offset: 0,
-            total: allStocks.length,
+            current_offset: 0,
+            total_count: allStocks.length,
             status: "in_progress",
           },
           { onConflict: "batch_type,batch_date" }
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const currentOffset = batch.offset as number;
+    const currentOffset = batch.current_offset as number;
     const chunk = allStocks.slice(currentOffset, currentOffset + CHUNK_SIZE);
 
     // If chunk is empty, all per-stock work is done — collect global data
@@ -315,7 +315,7 @@ export async function GET(request: NextRequest) {
     const newOffset = currentOffset + chunk.length;
     await supabase
       .from("batch_state")
-      .update({ offset: newOffset })
+      .update({ current_offset: newOffset })
       .eq("batch_type", "daily")
       .eq("batch_date", today);
 
