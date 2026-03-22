@@ -21,12 +21,12 @@ kakaopaysecurity/
 | 프론트엔드 | Next.js 16 + Tailwind CSS 4 |
 | 백엔드 API | Next.js API Routes |
 | AI/LLM | Gemini 1.5 Flash (Google AI Studio) |
-| 데이터 수집 | Finnhub API (Free) — GitHub Actions 배치 |
-| DB | Supabase (PostgreSQL) — stock_quotes, stock_news + 확장 테이블 |
+| 데이터 수집 | Finnhub API (Free, 60 req/min) — Vercel Cron 배치 |
+| 공시 수집 | SEC EDGAR API (무료, rate limit 주의) |
+| DB | Supabase (PostgreSQL) — 12개 테이블 (상세: `docs/DATA-CATALOG.md`) |
 | 벡터 DB | Pinecone 또는 ChromaDB (Phase 2) |
 | 배포 | Vercel (CI/CD — GitHub main push 자동 배포) |
-| 데이터 배치 | GitHub Actions Cron — 평일 06:00 KST |
-| Cron (경량) | Vercel Cron — 헬스체크/캐시 워밍 |
+| Cron | Vercel Cron — Finnhub 09:00 KST / SEC 10:00 KST |
 
 ## 배포 설정
 
@@ -45,34 +45,50 @@ GEMINI_API_KEY=              # Gemini 1.5 Flash (Google AI Studio)
 NEXT_PUBLIC_SUPABASE_URL=    # Supabase 프로젝트 URL
 SUPABASE_SERVICE_ROLE_KEY=   # Supabase 서버 사이드 키 (secret)
 CRON_SECRET=                 # Cron 엔드포인트 인증 키
-FINNHUB_API_KEY=             # 주가/어닝 데이터 (미연동 — Phase 1 완료 전 추가)
+FINNHUB_API_KEY=             # Finnhub 데이터 수집 (연동 완료)
 ```
 
 ## Supabase DB 스키마
 
 ```sql
--- 주가 데이터 (cron이 주기적으로 upsert)
-stock_quotes: ticker, price, change, change_percent, previous_close, updated_at
+-- 기존 테이블
+stock_quotes: ticker(PK), price, change, change_percent, previous_close, high, low, open, updated_at
+stock_news: tickers[], title, summary, source, url, published_at, sentiment, collected_date, image_url, category
+user_personas: user_id(UNIQUE), swing, long_term, scalping, blue_chip, etf, small_cap, tech, dividend (각 int 1~5)
 
--- 뉴스 데이터 (cron이 일 1회 insert)
-stock_news: tickers[], title, summary, source, url, published_at, sentiment, collected_date
+-- Finnhub 확장 테이블 (003_finnhub_tables.sql)
+stock_profiles: ticker(PK), name, name_kr, sector, market_cap, logo_url, website_url, tier
+stock_financials: ticker(PK), pe_ratio, pb_ratio, dividend_yield, week52_high, week52_low, market_cap, beta
+stock_recommendations: ticker(PK), buy, hold, sell, strong_buy, strong_sell, period
+stock_price_targets: ticker(PK), target_high, target_low, target_mean, target_median
+stock_upgrades: ticker, company, action, from_grade, to_grade, graded_at
+stock_insider_transactions: ticker, person_name, position, transaction_type, shares, price, filed_at
+earnings_calendar: ticker, report_date, eps_estimate, eps_actual, revenue_estimate, revenue_actual, quarter
+batch_state: batch_type, batch_date, current_offset, total_stocks, status
 
--- 투자자 페르소나 (온보딩 시 저장)
-user_personas: id(uuid), user_id(text, UNIQUE), swing, long_term, scalping, blue_chip, etf, small_cap, tech, dividend (각 int 1~5), created_at, updated_at
+-- SEC EDGAR 테이블
+sec_filings: ticker, cik, filing_type, filed_date, title, accession_number(UNIQUE), url
 ```
+
+> 전체 스키마 상세: `docs/DATA-CATALOG.md`
 
 ## API 엔드포인트
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|--------|------|
-| `/api/briefing` | POST | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 |
+| `/api/briefing` | POST | 포트폴리오 + 페르소나 기반 AI 브리핑 생성 (공시/재무/애널리스트 데이터 포함) |
 | `/api/persona` | POST/GET | 투자자 페르소나 저장/조회 |
-| `/api/cron/collect-data` | GET | 데이터 수집 (Authorization: Bearer {CRON_SECRET}) |
+| `/api/filings` | GET | SEC 공시 조회 (?tickers=AAPL,MSFT) |
+| `/api/cron/finnhub-collect` | GET | Finnhub 데이터 배치 수집 (25종목/호출, 청크 방식) |
+| `/api/cron/sec-collect` | GET | SEC EDGAR 공시 수집 |
+| `/api/cron/collect-data` | GET | 레거시 데이터 수집 (초기 mock용) |
 
 ## CI/CD
 
 - **자동 배포:** GitHub `main` push → Vercel 자동 빌드/배포
-- **Cron:** `vercel.json` — `0 21 * * *` (매일 06:00 KST)
+- **Cron:** `vercel.json`
+  - `/api/cron/finnhub-collect` — `0 0 * * *` (매일 09:00 KST)
+  - `/api/cron/sec-collect` — `0 1 * * *` (매일 10:00 KST)
 - **PR 검증:** 미설정
 
 ## Custom Skills (Claude Code)
@@ -92,5 +108,7 @@ user_personas: id(uuid), user_id(text, UNIQUE), swing, long_term, scalping, blue
 - `docs/proposal-executive-summary.md` — 과제 제출용 요약
 - `docs/proposal-detailed.md` — 면접 대비 상세 제안서
 - `docs/DEVELOPMENT-SPEC.md` — 기술 스펙 상세
+- `docs/DATA-CATALOG.md` — DB 테이블 전체 스키마 카탈로그
+- `docs/api-reference.md` — API 엔드포인트 상세
 - `docs/competitor-analysis.md` — 경쟁사 분석
 - `docs/superpowers-notes.md` — Superpowers 설치 및 사용 가이드

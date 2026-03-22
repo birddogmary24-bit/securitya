@@ -216,7 +216,81 @@ PLAN.md Phase 재조정(경제 캘린더/소셜 센티먼트 → Phase 2, SEC ED
 
 ### 다음 세션 시작 전 확인 사항
 
-- [ ] Vercel 배포 후 실제 동작 확인
+- [x] Vercel 배포 후 실제 동작 확인
 - [ ] 브리핑 카드에 댓글 기능 추가
 - [ ] 페르소나 기반 보완적 관점 엔진 (Phase 2 예정)
-- [ ] Finnhub API 연동
+- [x] Finnhub API 연동 ← 5차 세션 완료
+
+---
+
+## 2026-03-22 | 5차 세션 — Finnhub 1,000종목 파이프라인 + SEC EDGAR 공시 수집 + 공시 UI
+
+### 작업 요약
+Finnhub API를 활용한 1,000종목 데이터 수집 파이프라인 구축 (3단계 Tier 시스템, Vercel Cron 청크 배치). SEC EDGAR 공시(10-K/10-Q/8-K) 자동 수집 + 공시 목록 UI 구현. 브리핑 프롬프트에 공시/재무/애널리스트/목표가/어닝일정 데이터 통합.
+
+### 주요 작업
+
+| # | 작업 | 내용 | 시각 |
+|---|------|------|------|
+| 1 | Finnhub 데이터 파이프라인 | `finnhub.ts` — rate-limited API 클라이언트 (55 req/60s), 10개 함수 (quote, profile, news, financials, recommendations, priceTarget, upgrades, insider, earnings, quoteBatch) | 오후 |
+| 2 | 1,000종목 Tier 시스템 | `stock-tiers.ts` — Tier 1(50종목: 풀 데이터), Tier 2(200종목: 주가+뉴스), Tier 3(750종목: 주가만) | 오후 |
+| 3 | Finnhub Cron 엔드포인트 | `/api/cron/finnhub-collect` — 25종목/호출 청크 배치, `batch_state` 테이블로 진행 추적 | 오후 |
+| 4 | Finnhub DB 마이그레이션 | `003_finnhub_tables.sql` — 9개 신규 테이블 + stock_quotes/stock_news 컬럼 추가 | 오후 |
+| 5 | Vercel 환경변수 | FINNHUB_API_KEY 추가, 재배포 트리거 | 오후 |
+| 6 | SEC EDGAR 수집 | `sec-edgar.ts` — CIK 매핑 + 90일 공시 필터링 (10-K/10-Q/8-K) | 저녁 |
+| 7 | SEC Cron 엔드포인트 | `/api/cron/sec-collect` — 별도 SEC 수집 Cron | 저녁 |
+| 8 | 공시 목록 UI | `/filings` 페이지 — 유형 필터, 종목별 그룹핑, SEC.gov 링크 | 저녁 |
+| 9 | 공시 API | `/api/filings` — 티커별 공시 조회 (GET ?tickers=) | 저녁 |
+| 10 | 브리핑 프롬프트 강화 | 공시 + 재무지표 + 애널리스트 의견 + 목표가 + 등급변경 + 어닝일정 통합 | 저녁 |
+| 11 | 브리핑 카드 강화 | 카드 내 최근 SEC 공시 표시 (유형 뱃지 + 링크) | 저녁 |
+| 12 | BottomNav 확장 | "공시" 탭 추가 (4탭: 브리핑/포트폴리오/공시/투자성향) | 저녁 |
+| 13 | batch_state 버그 수정 | 컬럼명 불일치 수정 (`current_offset` 등) | 밤 |
+
+### 신규 파일
+
+| 파일 | 역할 |
+|------|------|
+| `app/src/lib/finnhub.ts` | Finnhub API 클라이언트 (rate limiter 내장) |
+| `app/src/lib/stock-tiers.ts` | 1,000종목 Tier 정의 (Tier 1: 50, Tier 2: 200, Tier 3: 750) |
+| `app/src/lib/sec-edgar.ts` | SEC EDGAR CIK 매핑 + 공시 수집 |
+| `app/src/lib/sec-edgar.sql` | sec_filings 테이블 스키마 |
+| `app/src/app/api/cron/finnhub-collect/route.ts` | Finnhub 배치 수집 Cron |
+| `app/src/app/api/cron/sec-collect/route.ts` | SEC EDGAR 수집 Cron |
+| `app/src/app/api/filings/route.ts` | 공시 조회 API |
+| `app/src/app/filings/page.tsx` | 공시 목록 UI 페이지 |
+| `supabase/migrations/003_finnhub_tables.sql` | 9개 신규 테이블 마이그레이션 |
+| `docs/superpowers/plans/2026-03-21-finnhub-data-pipeline.md` | 구현 계획서 |
+
+### 수정 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/src/lib/types.ts` | SecFiling, CompanyProfile, BasicFinancials, RecommendationTrend, PriceTarget, UpgradeDowngrade, InsiderTransaction, EarningsEvent 인터페이스 추가 |
+| `app/src/lib/supabase.ts` | Supabase 클라이언트 확장 |
+| `app/src/app/api/briefing/route.ts` | fetchMarketData 확장 (공시/재무/애널리스트/목표가/등급/어닝), 프롬프트 강화 |
+| `app/src/components/BriefingCard.tsx` | 카드 내 최근 공시 표시 섹션 추가 |
+| `app/src/components/BottomNav.tsx` | "공시" 탭 + FilingsIcon 추가 |
+| `app/vercel.json` | Cron 스케줄 변경 (finnhub 00:00 UTC, sec 01:00 UTC) |
+
+### Vercel Cron 스케줄
+
+| 엔드포인트 | UTC | KST | 설명 |
+|-----------|-----|-----|------|
+| `/api/cron/finnhub-collect` | 00:00 | 09:00 | Finnhub 1,000종목 배치 (청크 방식) |
+| `/api/cron/sec-collect` | 01:00 | 10:00 | SEC EDGAR 공시 수집 |
+
+### DB 현황 (Supabase, 12개 테이블)
+
+```
+기존: stock_quotes, stock_news, user_personas
+신규: stock_profiles, stock_financials, stock_recommendations,
+      stock_price_targets, stock_upgrades, stock_insider_transactions,
+      earnings_calendar, batch_state, sec_filings
+```
+
+### 다음 세션 시작 전 확인 사항
+
+- [ ] Cron 실행 결과 확인 (Finnhub/SEC 데이터 정상 수집 여부)
+- [ ] 브리핑 카드에 댓글 기능 추가 (Phase 1 남은 작업)
+- [ ] proposal 문서 동기화 (Finnhub/SEC 구현 반영)
+- [ ] 전체 문서 최신화 완료 여부 점검
