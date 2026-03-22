@@ -15,8 +15,12 @@ const typeColors: Record<string, string> = {
   "8-K": "bg-orange-100 text-orange-600",
 };
 
+function getKSTDate(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" });
+}
+
 function getSummaryCount(): number {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getKSTDate();
   const stored = localStorage.getItem("filing-summary-count");
   if (!stored) return 0;
   try {
@@ -28,7 +32,7 @@ function getSummaryCount(): number {
 }
 
 function incrementSummaryCount(): number {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getKSTDate();
   const current = getSummaryCount();
   const next = current + 1;
   localStorage.setItem("filing-summary-count", JSON.stringify({ date: today, count: next }));
