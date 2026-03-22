@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
     try {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const BRIEFING_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
 
       const portfolioInfo = portfolio.map((h) => {
         const q = quotes[h.ticker];
@@ -339,8 +339,21 @@ ${newsInfo}
 - 투자 조언이 아닌 정보 제공에 집중
 - JSON만 출력 (다른 텍스트 없이)`;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
+      let text = "";
+      for (const modelName of BRIEFING_MODELS) {
+        try {
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(prompt);
+          text = result.response.text();
+          break;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(`Briefing model ${modelName} failed: ${msg}`);
+          if (msg.includes("429") || msg.includes("404") || msg.includes("not found")) continue;
+          throw err;
+        }
+      }
+      if (!text) throw new Error("All AI models exhausted");
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       const briefingData = JSON.parse(jsonMatch ? jsonMatch[0] : text);
 

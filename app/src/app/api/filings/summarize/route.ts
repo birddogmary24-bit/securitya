@@ -2,6 +2,14 @@ import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+// 저렴한 순서로 fallback 체인
+const MODEL_CHAIN = [
+  "gemini-2.0-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+];
+
 // SEC 문서에서 텍스트 추출 (HTML 태그 제거, 길이 제한)
 function extractText(html: string, maxLength = 15000): string {
   return html
@@ -47,10 +55,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "문서에서 충분한 텍스트를 추출할 수 없습니다." }, { status: 422 });
     }
 
-    // Gemini 1.5 Flash로 요약
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
     const prompt = `다음은 ${ticker}의 SEC ${filingType} 공시 문서 원문 일부입니다. 한국 개인 투자자가 이해하기 쉽게 한국어로 요약해주세요.
 
@@ -65,10 +71,32 @@ export async function POST(request: NextRequest) {
 ## 문서 원문
 ${text}`;
 
-    const result = await model.generateContent(prompt);
-    const summary = result.response.text();
+    // fallback 체인: 순서대로 시도, 실패 시 다음 모델
+    const errors: string[] = [];
 
-    return Response.json({ summary });
+    for (const modelName of MODEL_CHAIN) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const summary = result.response.text();
+        return Response.json({ summary, model: modelName });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`Model ${modelName} failed: ${msg}`);
+        errors.push(`${modelName}: ${msg}`);
+        // 429(쿼터) 또는 404(모델 없음)면 다음 모델로
+        if (msg.includes("429") || msg.includes("404") || msg.includes("not found")) {
+          continue;
+        }
+        // 다른 에러(인증 등)는 바로 중단
+        break;
+      }
+    }
+
+    return Response.json(
+      { error: `모든 AI 모델이 실패했습니다. 잠시 후 다시 시도해주세요.\n${errors.join("\n")}` },
+      { status: 503 }
+    );
   } catch (error) {
     console.error("Filing summarize error:", error);
     return Response.json(
