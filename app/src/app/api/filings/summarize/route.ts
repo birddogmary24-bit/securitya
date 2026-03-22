@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+
+const CACHE_TTL_DAYS = 90;
 
 // 저렴한 순서로 fallback 체인 (2.5 최신 → 2.0 레거시)
 const MODEL_CHAIN = [
@@ -22,6 +25,12 @@ function extractText(html: string, maxLength = 15000): string {
     .slice(0, maxLength);
 }
 
+// accession number 추출 (URL에서)
+function extractAccessionNumber(url: string): string | null {
+  const match = url.match(/(\d{10}-\d{2}-\d{6})/);
+  return match ? match[1] : null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { url, filingType, ticker } = (await request.json()) as {
@@ -37,6 +46,24 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return Response.json({ error: "AI API 키가 설정되지 않았습니다." }, { status: 500 });
+    }
+
+    // 캐시 조회
+    const accessionNumber = extractAccessionNumber(url);
+    if (accessionNumber) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - CACHE_TTL_DAYS);
+
+      const { data: cached } = await supabase
+        .from("sec_filing_summaries")
+        .select("summary, model")
+        .eq("accession_number", accessionNumber)
+        .gte("created_at", cutoff.toISOString())
+        .single();
+
+      if (cached) {
+        return Response.json({ summary: cached.summary, model: cached.model, cached: true });
+      }
     }
 
     // SEC 문서 가져오기
@@ -79,7 +106,21 @@ ${text}`;
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(prompt);
         const summary = result.response.text();
-        return Response.json({ summary, model: modelName });
+
+        // 캐시 저장
+        if (accessionNumber) {
+          await supabase
+            .from("sec_filing_summaries")
+            .upsert({
+              accession_number: accessionNumber,
+              ticker,
+              filing_type: filingType,
+              summary,
+              model: modelName,
+            });
+        }
+
+        return Response.json({ summary, model: modelName, cached: false });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.warn(`Model ${modelName} failed: ${msg}`);
