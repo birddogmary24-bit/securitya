@@ -305,15 +305,15 @@ async function main() {
     }
   }
 
-  // 3. 오래된 캐시 정리 (3일 이상)
-  const threeDaysAgo = new Date();
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  // 3. 오래된 캐시 정리 (4일 이상 — 금요일 캐시가 월요일까지 유지)
+  const fourDaysAgo = new Date();
+  fourDaysAgo.setDate(fourDaysAgo.getDate() - 4);
   await supabase.from("stock_analysis_cache")
     .delete()
-    .lt("generated_at", threeDaysAgo.toISOString());
+    .lt("generated_at", fourDaysAgo.toISOString());
   await supabase.from("market_overview_cache")
     .delete()
-    .lt("generated_at", threeDaysAgo.toISOString());
+    .lt("generated_at", fourDaysAgo.toISOString());
 
   console.log(`\n=== 분석 생성 완료 ===`);
   console.log(`Generated: ${generated}, Skipped: ${skipped}, Errors: ${errors}`);
