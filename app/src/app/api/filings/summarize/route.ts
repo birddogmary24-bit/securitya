@@ -107,16 +107,20 @@ ${text}`;
         const result = await model.generateContent(prompt);
         const summary = result.response.text();
 
-        // 캐시 저장
+        // 캐시 저장 (best-effort, 실패해도 응답에 영향 없음)
         if (accessionNumber) {
-          await supabase
+          supabase
             .from("sec_filing_summaries")
             .upsert({
               accession_number: accessionNumber,
               ticker,
-              filing_type: filingType,
+              filing_type: filingType || "unknown",
               summary,
               model: modelName,
+              created_at: new Date().toISOString(),
+            })
+            .then(({ error }) => {
+              if (error) console.warn("Cache write failed:", error.message);
             });
         }
 
