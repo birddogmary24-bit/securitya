@@ -1,6 +1,6 @@
 # AI 미국주식 브리핑 서비스 — 세션 작업 로그
 
-> **최종 업데이트:** 2026-03-22
+> **최종 업데이트:** 2026-03-22 (10차 세션)
 >
 > 새 세션 시작 시 이 파일을 먼저 읽고 시작할 것.
 > 작업 완료 후 이 파일에 내용을 추가할 것.
@@ -409,7 +409,104 @@ SEC EDGAR 공시 AI 한국어 요약 기능 구현. Gemini 1.5 시리즈 종료 
 
 ### 다음 세션 시작 전 확인 사항
 
-- [ ] Phase 1 완료 — 댓글은 Phase 2로 이동
+- [x] Phase 1 완료 — 댓글은 Phase 2로 이동
 - [ ] Phase 2 시작: 카드별 댓글 기능 (Pool 3)
 - [ ] 공시 요약 품질 모니터링
 - [ ] proposal-executive-summary / proposal-detailed 구현 현황 반영
+
+---
+
+## 2026-03-22 | 9차 세션 — 브리핑 캐시 시스템 구현
+
+### 작업 요약
+AI 브리핑 결과를 Supabase에 캐싱하여, 동일 데이터 기간 내 재호출 시 Gemini API를 호출하지 않고 즉시 반환. 토큰 비용 절감 + 응답 속도 대폭 개선.
+
+### 배경/문제
+- 동일 포트폴리오로 브리핑을 반복 조회하면 매번 Gemini API 호출 → 토큰 낭비 + 느린 응답
+- Finnhub/SEC 데이터가 갱신되지 않은 기간에는 브리핑 내용이 동일 → 캐싱 가능
+
+### 주요 작업
+
+| # | 작업 | 내용 |
+|---|------|------|
+| 1 | DB 마이그레이션 | `004_briefing_cache.sql` — `briefing_cache` 테이블 (cache_key, data_freshness_key, briefing_data JSONB, expires_at) |
+| 2 | 캐시 키 설계 | 포트폴리오(ticker+quantity 정렬) + 페르소나를 SHA256 해싱 → 32자 고정 키. 종목 수 확장에 무관 |
+| 3 | 데이터 신선도 키 | `stock_quotes.updated_at`, `stock_news.published_at`, `sec_filings.filed_date` 최신값 조합 해싱 → 데이터 변경 감지 |
+| 4 | 캐시 로직 (API) | 요청 → cache_key + freshness_key 생성 → 캐시 HIT면 즉시 반환, MISS면 Gemini 호출 후 저장 |
+| 5 | 강제 새로고침 | `forceRefresh: true` 파라미터로 캐시 무시 가능 |
+| 6 | 캐시 정리 | 저장 시 3일 이상 만료 캐시 자동 삭제, TTL 24시간 |
+| 7 | 타입 확장 | `DailyBriefing`에 `cached`, `cachedAt` 필드 추가 |
+| 8 | 프론트엔드 UX | 캐시된 브리핑이면 "캐시 · 저장 시각" 표시 + "AI 새로 생성" 버튼 노출 |
+| 9 | 문서 동기화 | SESSIONLOG, CLAUDE.md, DATA-CATALOG, PLAN.md, DEVELOPMENT-SPEC 최신화 |
+
+### 캐시 무효화 전략
+
+| 조건 | 동작 |
+|------|------|
+| 동일 cache_key + 동일 freshness_key + 미만료 | 캐시 HIT → 즉시 반환 |
+| DB 데이터 갱신 (Cron 실행 후) | freshness_key 변경 → 캐시 MISS → 새로 생성 |
+| 24시간 경과 | expires_at 만료 → 캐시 MISS |
+| 사용자 "AI 새로 생성" 클릭 | forceRefresh=true → 캐시 무시 |
+
+### 성능 개선 예상
+
+| 항목 | 캐시 없음 | 캐시 HIT |
+|------|----------|----------|
+| 응답 시간 | 3~8초 (Gemini API) | ~200ms (DB 조회) |
+| Gemini 토큰 | 매 요청 소모 | 0 |
+| 비용 (월 100회 기준) | ~$4 | ~$1 (첫 생성만) |
+
+### 신규/수정 파일
+
+| 파일 | 상태 | 역할 |
+|------|------|------|
+| `supabase/migrations/004_briefing_cache.sql` | 신규 | 캐시 테이블 생성 SQL |
+| `app/src/app/api/briefing/route.ts` | 수정 | 캐시 유틸 함수 + POST 핸들러에 캐시 체크/저장 로직 |
+| `app/src/lib/types.ts` | 수정 | DailyBriefing에 cached, cachedAt 필드 추가 |
+| `app/src/app/page.tsx` | 수정 | 캐시 표시 UI + forceRefresh 지원 + "AI 새로 생성" 버튼 |
+
+### 다음 세션 시작 전 확인 사항
+
+- [ ] Supabase에서 `004_briefing_cache.sql` 실행
+- [ ] 캐시 동작 확인 (첫 요청 → 캐시 저장, 두 번째 → 캐시 HIT)
+- [ ] Phase 2 시작: 카드별 댓글 기능 (Pool 3)
+- [ ] proposal 문서에 캐시 기능 반영
+
+---
+
+## 2026-03-22 | 10차 세션 — PLAN.md Phase 2 상세화
+
+### 작업 요약
+PLAN.md의 Phase 2 항목(9~15번)이 너무 간략했던 것을 proposal-detailed.md 수준으로 상세화. 각 항목에 구체적 구현 범위, 데이터 소스, UX 동작 방식 추가.
+
+### 주요 작업
+
+| # | 작업 | 내용 |
+|---|------|------|
+| 1 | 현황 확인 | 전체 Phase 진행 상태 + 미커밋 변경사항 점검 |
+| 2 | Phase 2 상세화 | PLAN.md 항목 9~15번 상세 설명 추가 |
+
+### 상세화 내역
+
+| 항목 | 추가된 내용 |
+|------|-----------|
+| 9. 카드별 댓글 | 댓글 테이블 스키마, 페르소나 뱃지 표시, 투자조언 필터링 |
+| 10. 공시 RAG | 청킹 대상 섹션(MD&A, Risk Factors), 벡터 DB, RAG 흐름 |
+| 11. 공시 해석 UI | AI 핵심 포인트 요약, 투자 시사점 제시 |
+| 12. 전분기 비교 | 구체적 지표(매출, EPS), 가이던스 vs 실적 괴리 분석 |
+| 13. 경제 캘린더 | FOMC/NFP/CPI 등 이벤트 목록, 캘린더 UI |
+| 14. 소셜 센티먼트 | bullish/bearish 추이, Pool 2 매핑 |
+| 15. 댓글 고도화 | 팩트체크 동작 방식, 신뢰도 표시, 출처 기반 토론 |
+
+### 수정 파일
+
+| 파일 | 상태 | 역할 |
+|------|------|------|
+| `PLAN.md` | 수정 | Phase 2 항목 9~15번 상세화 |
+| `SESSIONLOG.md` | 수정 | 10차 세션 기록 추가 |
+
+### 다음 세션 시작 전 확인 사항
+
+- [ ] Supabase에서 `004_briefing_cache.sql` 실행 (9차 세션 잔여)
+- [ ] 캐시 동작 확인 (9차 세션 잔여)
+- [ ] Phase 2 구현 시작 시 우선순위 결정 (9~15번 중 어디부터)
