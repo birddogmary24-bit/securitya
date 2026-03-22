@@ -15,7 +15,7 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           echo "=== SEC EDGAR 공시 수집 시작 ==="
-          for i in $(seq 1 30); do
+          for i in $(seq 1 60); do
             echo ""
             echo "--- Chunk $i ---"
             response=$(curl -s -w "\n%{http_code}" "$API_URL" \
@@ -43,5 +43,5 @@ jobs:
             sleep 5
           done
 
-          echo "Warning: 30 chunks processed but batch not completed"
+          echo "Warning: 60 chunks processed but batch not completed"
           exit 1

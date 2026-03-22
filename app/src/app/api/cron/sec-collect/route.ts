@@ -9,7 +9,7 @@ function todayKST(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
 }
 
-const SEC_CHUNK_SIZE = 25;
+const SEC_CHUNK_SIZE = 10; // Vercel Hobby 10초 timeout 대응
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");

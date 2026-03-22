@@ -15,7 +15,7 @@ import {
   getRequestCount,
 } from "@/lib/finnhub";
 
-const CHUNK_SIZE = 25;
+const CHUNK_SIZE = 5; // Vercel Hobby 10초 timeout 대응 (Tier 1: 5×6=30 calls)
 
 function todayKST(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });

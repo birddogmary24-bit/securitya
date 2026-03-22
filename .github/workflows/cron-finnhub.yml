@@ -15,7 +15,7 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           echo "=== Finnhub 데이터 수집 시작 ==="
-          for i in $(seq 1 30); do
+          for i in $(seq 1 120); do
             echo ""
             echo "--- Chunk $i ---"
             response=$(curl -s -w "\n%{http_code}" "$API_URL" \
@@ -43,5 +43,5 @@ jobs:
             sleep 10
           done
 
-          echo "Warning: 30 chunks processed but batch not completed"
+          echo "Warning: 120 chunks processed but batch not completed"
           exit 1
