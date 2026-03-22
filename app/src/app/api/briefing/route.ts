@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { StockHolding, BriefingCard, DailyBriefing, StockQuote, NewsItem, Persona, PERSONA_TRAITS } from "@/lib/types";
+import { StockHolding, BriefingCard, DailyBriefing, StockQuote, NewsItem, Persona, PERSONA_TRAITS, SecFiling } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { MOCK_QUOTES, MOCK_NEWS } from "@/lib/mock-data";
 
@@ -22,10 +22,16 @@ function getKSTString(): string {
   });
 }
 
-// Supabase에서 주가/뉴스 가져오기, 실패하면 mock fallback
+// Supabase에서 주가/뉴스/공시 가져오기, 실패하면 mock fallback
 async function fetchMarketData(tickers: string[]): Promise<{
   quotes: Record<string, StockQuote>;
   news: NewsItem[];
+  filings: SecFiling[];
+  financials: Record<string, unknown>[];
+  recommendations: Record<string, unknown>[];
+  priceTargets: Record<string, unknown>[];
+  upgrades: Record<string, unknown>[];
+  earnings: Record<string, unknown>[];
   dataSource: "supabase" | "mock";
 }> {
   try {
@@ -39,6 +45,48 @@ async function fetchMarketData(tickers: string[]): Promise<{
       .select("*")
       .order("published_at", { ascending: false })
       .limit(20);
+
+    // SEC 공시 조회 (최근 30일)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const { data: filingsData } = await supabase
+      .from("sec_filings")
+      .select("*")
+      .in("ticker", tickers)
+      .gte("filed_date", thirtyDaysAgo.toISOString().split("T")[0])
+      .order("filed_date", { ascending: false })
+      .limit(20);
+
+    const { data: financialsData } = await supabase
+      .from("stock_financials")
+      .select("*")
+      .in("ticker", tickers);
+
+    const { data: recommendationsData } = await supabase
+      .from("stock_recommendations")
+      .select("*")
+      .in("ticker", tickers);
+
+    const { data: priceTargetsData } = await supabase
+      .from("stock_price_targets")
+      .select("*")
+      .in("ticker", tickers);
+
+    const { data: upgradesData } = await supabase
+      .from("stock_upgrades")
+      .select("*")
+      .in("ticker", tickers)
+      .gte("graded_at", new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0])
+      .order("graded_at", { ascending: false });
+
+    const nextWeek = new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
+    const todayStr = new Date().toISOString().split("T")[0];
+    const { data: earningsData } = await supabase
+      .from("earnings_calendar")
+      .select("*")
+      .in("ticker", tickers)
+      .gte("report_date", todayStr)
+      .lte("report_date", nextWeek);
 
     if (quotesError || newsError || !quotesData?.length) {
       throw new Error("Supabase data unavailable");
@@ -65,9 +113,28 @@ async function fetchMarketData(tickers: string[]): Promise<{
       sentiment: n.sentiment,
     }));
 
-    return { quotes, news, dataSource: "supabase" };
+    const filings: SecFiling[] = (filingsData ?? []).map((f) => ({
+      id: f.id,
+      ticker: f.ticker,
+      cik: f.cik,
+      filingType: f.filing_type,
+      filedDate: f.filed_date,
+      title: f.title,
+      accessionNumber: f.accession_number,
+      url: f.url,
+    }));
+
+    return {
+      quotes, news, filings,
+      financials: (financialsData ?? []) as Record<string, unknown>[],
+      recommendations: (recommendationsData ?? []) as Record<string, unknown>[],
+      priceTargets: (priceTargetsData ?? []) as Record<string, unknown>[],
+      upgrades: (upgradesData ?? []) as Record<string, unknown>[],
+      earnings: (earningsData ?? []) as Record<string, unknown>[],
+      dataSource: "supabase",
+    };
   } catch {
-    return { quotes: MOCK_QUOTES, news: MOCK_NEWS, dataSource: "mock" };
+    return { quotes: MOCK_QUOTES, news: MOCK_NEWS, filings: [], financials: [], recommendations: [], priceTargets: [], upgrades: [], earnings: [], dataSource: "mock" };
   }
 }
 
@@ -75,6 +142,7 @@ function buildFallbackBriefing(
   portfolio: StockHolding[],
   quotes: Record<string, StockQuote>,
   news: NewsItem[],
+  filings: SecFiling[],
   dataSource: "supabase" | "mock"
 ): DailyBriefing {
   const tickers = portfolio.map((h) => h.ticker);
@@ -82,6 +150,7 @@ function buildFallbackBriefing(
   const cards: BriefingCard[] = portfolio.map((holding) => {
     const quote = quotes[holding.ticker];
     const relatedNews = news.filter((n) => n.relatedTickers.includes(holding.ticker));
+    const tickerFilings = filings.filter((f) => f.ticker === holding.ticker);
     const macroNews = news.filter((n) => n.relatedTickers.length === 0);
 
     const sentiment: "positive" | "negative" | "neutral" =
@@ -120,6 +189,7 @@ function buildFallbackBriefing(
       proactivesuggestion: proactiveSuggestion,
       relatedNews: relatedNews.slice(0, 2),
       quote,
+      recentFilings: tickerFilings.slice(0, 3),
     };
   });
 
@@ -143,11 +213,11 @@ export async function POST(request: NextRequest) {
     }
 
     const tickers = portfolio.map((h) => h.ticker);
-    const { quotes, news, dataSource } = await fetchMarketData(tickers);
+    const { quotes, news, filings, financials, recommendations, priceTargets, upgrades, earnings, dataSource } = await fetchMarketData(tickers);
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return Response.json(buildFallbackBriefing(portfolio, quotes, news, dataSource));
+      return Response.json(buildFallbackBriefing(portfolio, quotes, news, filings, dataSource));
     }
 
     try {
@@ -171,12 +241,72 @@ export async function POST(request: NextRequest) {
 
       const personaSection = persona ? buildPersonaPrompt(persona) : "";
 
+      // SEC 공시 정보
+      const filingsInfo = filings.length > 0
+        ? filings
+            .map((f) => `- ${f.ticker}: ${f.filingType} — ${f.title} (${f.filedDate})`)
+            .join("\n")
+        : "최근 30일 내 관련 공시 없음";
+
+      // 재무지표
+      const financialsInfo = financials.length > 0
+        ? financials
+            .map((f) => `- ${f.ticker}: PER ${f.pe_ratio ?? "N/A"}, 배당수익률 ${f.dividend_yield ?? "N/A"}%, 52주 고가 $${f.week52_high ?? "N/A"}, 저가 $${f.week52_low ?? "N/A"}`)
+            .join("\n")
+        : null;
+
+      // 월가 애널리스트 의견
+      const recommendationsInfo = recommendations.length > 0
+        ? recommendations
+            .map((r) => `- ${r.ticker}: 강력매수 ${r.strong_buy ?? 0}, 매수 ${r.buy ?? 0}, 보유 ${r.hold ?? 0}, 매도 ${r.sell ?? 0}`)
+            .join("\n")
+        : null;
+
+      // 목표가
+      const priceTargetsInfo = priceTargets.length > 0
+        ? priceTargets
+            .map((p) => `- ${p.ticker}: 평균 목표가 $${p.target_mean ?? "N/A"} (최고 $${p.target_high ?? "N/A"}, 최저 $${p.target_low ?? "N/A"})`)
+            .join("\n")
+        : null;
+
+      // 최근 투자등급 변경
+      const upgradesInfo = upgrades.length > 0
+        ? upgrades
+            .map((u) => `- ${u.ticker}: ${u.company} → ${u.action} (${u.from_grade} → ${u.to_grade})`)
+            .join("\n")
+        : null;
+
+      // 향후 2주 실적 발표 일정
+      const earningsInfo = earnings.length > 0
+        ? earnings
+            .map((e) => `- ${e.ticker}: ${e.report_date} 실적 발표 예정 (EPS 예상: $${e.eps_estimate ?? "N/A"})`)
+            .join("\n")
+        : null;
+
       const prompt = `당신은 AI 투자 브리핑 어시스턴트입니다. 한국 개인 투자자를 위해 미국 주식 브리핑을 생성합니다.
 데이터 출처: ${dataLabel}
 ${personaSection}
 
 ## 사용자 포트폴리오
 ${portfolioInfo}
+
+## 최근 SEC 공시
+${filingsInfo}
+
+## 재무지표
+${financialsInfo || "조회된 재무지표 없음"}
+
+## 월가 애널리스트 의견
+${recommendationsInfo || "조회된 의견 없음"}
+
+## 목표가
+${priceTargetsInfo || "조회된 목표가 없음"}
+
+## 최근 투자등급 변경
+${upgradesInfo || "최근 변경 없음"}
+
+## 향후 2주 실적 발표 일정
+${earningsInfo || "예정된 발표 없음"}
 
 ## 오늘의 주요 뉴스/이벤트
 ${newsInfo}
@@ -225,6 +355,7 @@ ${newsInfo}
           proactivesuggestion: (card.proactiveSuggestion || null) as string | undefined,
           relatedNews: news.filter((n) => n.relatedTickers.includes(ticker)).slice(0, 2),
           quote: quotes[ticker] || null,
+          recentFilings: filings.filter((f) => f.ticker === ticker).slice(0, 3),
         };
       });
 
@@ -241,7 +372,7 @@ ${newsInfo}
 
     } catch (aiError) {
       console.error("Gemini API error, falling back:", aiError);
-      return Response.json(buildFallbackBriefing(portfolio, quotes, news, dataSource));
+      return Response.json(buildFallbackBriefing(portfolio, quotes, news, filings, dataSource));
     }
   } catch (error) {
     console.error("Briefing generation error:", error);

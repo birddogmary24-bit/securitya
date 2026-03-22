@@ -66,6 +66,18 @@ export interface BriefingCard {
   proactivesuggestion?: string;
   relatedNews: NewsItem[];
   quote?: StockQuote;
+  recentFilings?: SecFiling[];
+}
+
+export interface SecFiling {
+  id?: string;
+  ticker: string;
+  cik: string;
+  filingType: string;
+  filedDate: string;
+  title: string;
+  accessionNumber: string;
+  url: string;
 }
 
 export interface DailyBriefing {
@@ -91,3 +103,72 @@ export const POPULAR_STOCKS: StockHolding[] = [
   { ticker: "NFLX", name: "Netflix Inc.", nameKr: "넷플릭스", quantity: 0 },
   { ticker: "COIN", name: "Coinbase Global", nameKr: "코인베이스", quantity: 0 },
 ];
+
+export interface CompanyProfile {
+  ticker: string;
+  name: string;
+  nameKr: string;
+  sector: string;
+  marketCap: number;
+  logoUrl: string;
+  websiteUrl: string;
+  tier: 1 | 2 | 3;
+}
+
+export interface BasicFinancials {
+  ticker: string;
+  peRatio: number | null;
+  pbRatio: number | null;
+  dividendYield: number | null;
+  week52High: number;
+  week52Low: number;
+  marketCap: number;
+  beta: number | null;
+}
+
+export interface RecommendationTrend {
+  ticker: string;
+  buy: number;
+  hold: number;
+  sell: number;
+  strongBuy: number;
+  strongSell: number;
+  period: string;
+}
+
+export interface PriceTarget {
+  ticker: string;
+  targetHigh: number;
+  targetLow: number;
+  targetMean: number;
+  targetMedian: number;
+}
+
+export interface UpgradeDowngrade {
+  ticker: string;
+  company: string;
+  action: string;
+  fromGrade: string;
+  toGrade: string;
+  gradedAt: string;
+}
+
+export interface InsiderTransaction {
+  ticker: string;
+  personName: string;
+  position: string;
+  transactionType: string;
+  shares: number;
+  price: number;
+  filedAt: string;
+}
+
+export interface EarningsEvent {
+  ticker: string;
+  reportDate: string;
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
+  quarter: string;
+}

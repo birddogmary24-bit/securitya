@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/collect-data",
-      "schedule": "0 21 * * *"
+      "path": "/api/cron/finnhub-collect",
+      "schedule": "0 0 * * *"
     }
   ]
 }
