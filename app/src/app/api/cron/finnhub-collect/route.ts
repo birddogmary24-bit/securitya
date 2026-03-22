@@ -196,9 +196,6 @@ export async function GET(request: NextRequest) {
               change: quote.change,
               change_percent: quote.changePercent,
               previous_close: quote.previousClose,
-              high: quote.high,
-              low: quote.low,
-              open: quote.open,
               updated_at: new Date().toISOString(),
             },
             { onConflict: "ticker" }
