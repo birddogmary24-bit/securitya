@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 미국주식 브리핑 서비스 — 과제 제출</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #1a1a1a;
+      line-height: 1.7;
+      background: #fafafa;
+    }
+    h1 {
+      font-size: 1.6em;
+      border-bottom: 2px solid #222;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    .intro {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .intro p { margin: 8px 0; }
+    .service-desc {
+      background: #f0f4ff;
+      border-left: 4px solid #4a6cf7;
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 32px;
+    }
+    .service-desc p { margin: 6px 0; }
+    .demo-link {
+      display: inline-block;
+      margin-top: 8px;
+      background: #4a6cf7;
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .demo-link:hover { background: #3550d5; }
+    h2 {
+      font-size: 1.15em;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    th {
+      background: #f5f5f5;
+      text-align: left;
+      padding: 10px 16px;
+      font-weight: 600;
+      font-size: 0.9em;
+      color: #555;
+    }
+    td {
+      padding: 10px 16px;
+      border-top: 1px solid #eee;
+    }
+    a { color: #4a6cf7; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .summary-box {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .summary-box ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    .summary-box li {
+      margin: 5px 0;
+    }
+    .tech-box {
+      background: #f8faf8;
+      border: 1px solid #d0e0d0;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .tech-box ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    .tech-box li {
+      margin: 5px 0;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .badge-feature { background: #e8f0fe; color: #1a73e8; }
+    .badge-data { background: #fef7e0; color: #b06000; }
+    .badge-infra { background: #e6f4ea; color: #137333; }
+    .badge-ai { background: #fce8e6; color: #c5221f; }
+  </style>
+</head>
+<body>
+
+<h1>AI 미국주식 브리핑 서비스 — 과제 제출</h1>
+
+<div class="intro">
+  <p>안녕하세요. <strong>박재환</strong>입니다.</p>
+  <p>출제해주신 과제내용에 대한 결과물을 제출드립니다.</p>
+  <p>Executive Summary, Proposal Detailed 등 기획안만 제출하려 했으나, 가능하다면 짧은 시간과 어려운 환경이지만 간단한 MVP 서비스라도 만들어보고 싶어서 몇 가지 만들어보았습니다. 완성도는 부족하지만 잘 확인 부탁드리겠습니다.</p>
+  <p>또한, 서류제출/면접 이후에도 계속 업데이트될 수 있을 듯 하니 계속 재조회하시면서 지켜봐주시면 감사하겠습니다.</p>
+</div>
+
+<div class="service-desc">
+  <p><strong>서비스 개요:</strong> 한국 투자자의 미국 주식 정보 접근 격차를 AI/LLM으로 해소하는 서비스입니다. 3가지 정보 풀(공식 데이터·공개 정보·집단 지성)을 구축하고, 투자자 페르소나 기반으로 선제적 인사이트를 제공합니다.</p>
+  <p><strong>형태:</strong> A사 앱 내 웹뷰(Add-on) 방식의 웹 서비스</p>
+  <a class="demo-link" href="https://securitya.vercel.app" target="_blank">MVP 데모 바로가기</a>
+</div>
+
+<h2>주요 제안 내용</h2>
+<div class="summary-box">
+  <ul>
+    <li><strong>문제 정의:</strong> 한국 투자자 47조원 미국주식 투자, 그러나 언어·시차·맥락의 3가지 구조적 벽으로 정보 비대칭 존재</li>
+    <li><strong>솔루션:</strong> 3가지 정보 풀(SEC 공시·뉴스/소셜·집단 지성) 구축 + 투자자 페르소나 기반 개인화 AI 브리핑</li>
+    <li><strong>핵심 차별점:</strong> 단순 번역·알림이 아닌, 사용자가 찾기 전에 AI가 먼저 맥락을 해석하고 선제적으로 인사이트를 제안</li>
+    <li><strong>기능 1 — AI 모닝 브리핑:</strong> 보유종목 + 페르소나 기반 개인화 브리핑. 확증편향을 깨는 보완적 관점 제공</li>
+    <li><strong>기능 2 — SEC 공시 해석기:</strong> 10-K/10-Q/8-K 자동 파싱·한국어 심층 분석 (한국 증권사 최초)</li>
+    <li><strong>기능 3 — 구조화된 집단 지성:</strong> AI 정보 기반 댓글·토론 시스템으로 커뮤니티 활성화</li>
+    <li><strong>검증 지표:</strong> North Star = AI 콘텐츠 열람 후 7일 내 거래 전환율. 브리핑 열람율 40%+, 페르소나 설정 완료율 80%+ 목표</li>
+  </ul>
+</div>
+
+<h2>MVP 서비스 핵심 기능 및 기술 사항</h2>
+<div class="tech-box">
+  <p><strong>핵심 기능</strong></p>
+  <ul>
+    <li><span class="badge badge-feature">기능</span> 포트폴리오 입력 + 8가지 투자 성향 페르소나 온보딩 → 개인화 AI 브리핑 생성</li>
+    <li><span class="badge badge-feature">기능</span> 550종목 3-Tier 시스템: Tier 1(50) 전체 수집, Tier 2(100) 전체 수집, Tier 3(400) 기본+뉴스, On-demand 즉시 등록</li>
+    <li><span class="badge badge-feature">기능</span> SEC EDGAR 공시(10-K/10-Q/8-K) 자동 수집 + AI 한국어 요약</li>
+    <li><span class="badge badge-feature">기능</span> 종목 검색 시 미등록 종목도 Finnhub에서 즉시 가져와 자동 등록 (On-demand)</li>
+  </ul>
+  <p style="margin-top: 16px;"><strong>기술적 주요 사항</strong></p>
+  <ul>
+    <li><span class="badge badge-data">데이터</span> Finnhub API(무료) — 주가·재무·추천·목표가·내부자거래·어닝 등 8개 테이블로 구조화 수집</li>
+    <li><span class="badge badge-data">데이터</span> SEC EDGAR API — CIK 매핑 + 90일 공시 수집, 청크 방식 배치 처리</li>
+    <li><span class="badge badge-ai">AI</span> Gemini 2.5 Flash/Flash-Lite 4단계 모델 fallback 체인 — 안정성 확보 + 비용 최적화</li>
+    <li><span class="badge badge-ai">AI</span> 종목별 AI 분석 사전 생성(Cron) → 브리핑 요청 시 캐시 조합으로 즉시 응답 (LLM 호출 최소화)</li>
+    <li><span class="badge badge-ai">AI</span> data_freshness_key(SHA256) — 데이터 미변경 시 AI 재생성 스킵으로 API 비용 절감</li>
+    <li><span class="badge badge-infra">인프라</span> GitHub Actions Cron(06:30 KST) — Vercel Hobby 10초 timeout 우회, 60분 배치 실행</li>
+    <li><span class="badge badge-infra">인프라</span> Supabase PostgreSQL 15개 테이블, RLS 보안 적용. 전체 무료 티어 운영</li>
+    <li><span class="badge badge-infra">인프라</span> Next.js 16 + Tailwind CSS 4 + Vercel 배포 — 모바일 웹뷰(375px) 최적화</li>
+  </ul>
+  <p style="margin-top: 16px;"><strong>향후 구현 예정</strong></p>
+  <ul>
+    <li><span class="badge badge-ai">AI</span> SEC 공시 원문 RAG 파이프라인 — 벡터 DB 기반 공시 심층 Q&amp;A (Phase 2)</li>
+    <li><span class="badge badge-feature">기능</span> 소셜 센티먼트 분석 — Reddit·X 여론 수집 + AI 감성 분석 통합 (Phase 2)</li>
+    <li><span class="badge badge-feature">기능</span> AI 정보 기반 댓글·토론 시스템 — 구조화된 집단 지성 커뮤니티 (Phase 3)</li>
+    <li><span class="badge badge-feature">기능</span> 대화형 AI 투자 Q&amp;A 챗봇 — 공시·어닝콜 기반 맥락 답변 + 스트리밍 (Phase 4)</li>
+    <li><span class="badge badge-infra">인프라</span> 사용자 인증(Supabase Auth) + 푸시 알림 — 실시간 이벤트 알림 체계 구축</li>
+  </ul>
+</div>
+
+<h2>기획 문서</h2>
+<table>
+  <tr><th>문서</th><th>링크</th></tr>
+  <tr>
+    <td>Executive Summary</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/docs/proposal-executive-summary.md" target="_blank">proposal-executive-summary.md</a></td>
+  </tr>
+  <tr>
+    <td>상세 제안서 (Proposal Detailed)</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/docs/proposal-detailed.md" target="_blank">proposal-detailed.md</a></td>
+  </tr>
+</table>
+
+<h2>프로젝트 Repository</h2>
+<table>
+  <tr><th>항목</th><th>링크</th></tr>
+  <tr>
+    <td>GitHub Repository</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya" target="_blank">birddogmary24-bit/securitya</a></td>
+  </tr>
+</table>
+
+<h2>구현 계획 및 작업 로그</h2>
+<table>
+  <tr><th>문서</th><th>링크</th></tr>
+  <tr>
+    <td>구현 계획 (PLAN)</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/PLAN.md" target="_blank">PLAN.md</a></td>
+  </tr>
+  <tr>
+    <td>세션별 작업 로그 (Session Log)</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/SESSIONLOG.md" target="_blank">SESSIONLOG.md</a></td>
+  </tr>
+</table>
+
+<h2>기술 문서</h2>
+<table>
+  <tr><th>문서</th><th>링크</th></tr>
+  <tr>
+    <td>기술 아키텍처</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/TECHNICAL-ARCHITECTURE.md" target="_blank">TECHNICAL-ARCHITECTURE.md</a></td>
+  </tr>
+  <tr>
+    <td>개발 스펙 (Development Spec)</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/docs/DEVELOPMENT-SPEC.md" target="_blank">DEVELOPMENT-SPEC.md</a></td>
+  </tr>
+  <tr>
+    <td>제품 요구사항 (PRD)</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/PRD.md" target="_blank">PRD.md</a></td>
+  </tr>
+</table>
+
+<h2>기타 참고 문서</h2>
+<table>
+  <tr><th>문서</th><th>링크</th></tr>
+  <tr>
+    <td>DB 스키마 카탈로그</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/docs/DATA-CATALOG.md" target="_blank">DATA-CATALOG.md</a></td>
+  </tr>
+  <tr>
+    <td>API 레퍼런스</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/docs/api-reference.md" target="_blank">api-reference.md</a></td>
+  </tr>
+  <tr>
+    <td>경쟁사 분석</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/docs/competitor-analysis.md" target="_blank">competitor-analysis.md</a></td>
+  </tr>
+  <tr>
+    <td>종목 리스트</td>
+    <td><a href="https://github.com/birddogmary24-bit/securitya/blob/main/docs/stock-list.md" target="_blank">stock-list.md</a></td>
+  </tr>
+</table>
+
+<h2>System Architecture</h2>
+<div style="background:#fff; border:1px solid #e0e0e0; border-radius:8px; padding:20px; margin-bottom:28px; overflow-x:auto;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',sans-serif" font-size="11">
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6Z" fill="#888"/></marker>
+    <marker id="ah-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6Z" fill="#4a6cf7"/></marker>
+  </defs>
+
+  <!-- Background sections -->
+  <rect x="10" y="10" width="200" height="500" rx="10" fill="#fff8f0" stroke="#e8d0b0" stroke-dasharray="4"/>
+  <text x="110" y="32" text-anchor="middle" font-size="10" fill="#b06000" font-weight="600">External Data Sources</text>
+
+  <rect x="230" y="10" width="180" height="500" rx="10" fill="#f0f8ff" stroke="#b0c8e8" stroke-dasharray="4"/>
+  <text x="320" y="32" text-anchor="middle" font-size="10" fill="#1a73e8" font-weight="600">Batch Pipeline (Cron)</text>
+
+  <rect x="430" y="10" width="180" height="500" rx="10" fill="#f0fff0" stroke="#b0e0b0" stroke-dasharray="4"/>
+  <text x="520" y="32" text-anchor="middle" font-size="10" fill="#137333" font-weight="600">Database &amp; Cache</text>
+
+  <rect x="630" y="10" width="240" height="500" rx="10" fill="#fff0f0" stroke="#e0b0b0" stroke-dasharray="4"/>
+  <text x="750" y="32" text-anchor="middle" font-size="10" fill="#c5221f" font-weight="600">Application Layer</text>
+
+  <!-- Finnhub API -->
+  <rect x="30" y="60" width="160" height="70" rx="8" fill="#fff" stroke="#e8a040" stroke-width="1.5"/>
+  <text x="110" y="82" text-anchor="middle" font-weight="700" font-size="12" fill="#b06000">Finnhub API</text>
+  <text x="110" y="97" text-anchor="middle" font-size="9" fill="#888">Free Tier (60 req/min)</text>
+  <text x="110" y="112" text-anchor="middle" font-size="9" fill="#888">Quote / News / Financials</text>
+  <text x="110" y="122" text-anchor="middle" font-size="9" fill="#888">Recommendations / Earnings</text>
+
+  <!-- SEC EDGAR -->
+  <rect x="30" y="155" width="160" height="60" rx="8" fill="#fff" stroke="#e8a040" stroke-width="1.5"/>
+  <text x="110" y="177" text-anchor="middle" font-weight="700" font-size="12" fill="#b06000">SEC EDGAR API</text>
+  <text x="110" y="192" text-anchor="middle" font-size="9" fill="#888">10-K / 10-Q / 8-K</text>
+  <text x="110" y="205" text-anchor="middle" font-size="9" fill="#888">CIK Mapping + 90-day</text>
+
+  <!-- Gemini -->
+  <rect x="30" y="335" width="160" height="60" rx="8" fill="#fff" stroke="#c5221f" stroke-width="1.5"/>
+  <text x="110" y="357" text-anchor="middle" font-weight="700" font-size="12" fill="#c5221f">Gemini 2.5 Flash</text>
+  <text x="110" y="372" text-anchor="middle" font-size="9" fill="#888">Flash / Flash-Lite</text>
+  <text x="110" y="385" text-anchor="middle" font-size="9" fill="#888">4-step Fallback Chain</text>
+
+  <!-- Tier badge -->
+  <rect x="30" y="250" width="160" height="60" rx="8" fill="#fff" stroke="#e8a040" stroke-width="1.5"/>
+  <text x="110" y="272" text-anchor="middle" font-weight="700" font-size="12" fill="#b06000">550 Stocks</text>
+  <text x="110" y="288" text-anchor="middle" font-size="9" fill="#888">T1(50) + T2(100) + T3(400)</text>
+  <text x="110" y="300" text-anchor="middle" font-size="9" fill="#888">+ On-demand</text>
+
+  <!-- GitHub Actions - Finnhub -->
+  <rect x="250" y="60" width="140" height="55" rx="8" fill="#fff" stroke="#4a6cf7" stroke-width="1.5"/>
+  <text x="320" y="80" text-anchor="middle" font-weight="700" font-size="11" fill="#1a73e8">collect-finnhub</text>
+  <text x="320" y="95" text-anchor="middle" font-size="9" fill="#888">GitHub Actions</text>
+  <text x="320" y="107" text-anchor="middle" font-size="9" fill="#888">06:30 KST daily</text>
+
+  <!-- GitHub Actions - SEC -->
+  <rect x="250" y="155" width="140" height="55" rx="8" fill="#fff" stroke="#4a6cf7" stroke-width="1.5"/>
+  <text x="320" y="175" text-anchor="middle" font-weight="700" font-size="11" fill="#1a73e8">collect-sec</text>
+  <text x="320" y="190" text-anchor="middle" font-size="9" fill="#888">GitHub Actions</text>
+  <text x="320" y="202" text-anchor="middle" font-size="9" fill="#888">07:30 KST daily</text>
+
+  <!-- Generate Analysis -->
+  <rect x="250" y="250" width="140" height="65" rx="8" fill="#fff" stroke="#4a6cf7" stroke-width="1.5"/>
+  <text x="320" y="268" text-anchor="middle" font-weight="700" font-size="11" fill="#1a73e8">generate-analysis</text>
+  <text x="320" y="283" text-anchor="middle" font-size="9" fill="#888">Per-stock AI analysis</text>
+  <text x="320" y="296" text-anchor="middle" font-size="9" fill="#888">SHA256 freshness check</text>
+  <text x="320" y="309" text-anchor="middle" font-size="9" fill="#888">Skip if unchanged</text>
+
+  <!-- Supabase -->
+  <rect x="450" y="55" width="140" height="100" rx="8" fill="#fff" stroke="#137333" stroke-width="1.5"/>
+  <text x="520" y="77" text-anchor="middle" font-weight="700" font-size="12" fill="#137333">Supabase</text>
+  <text x="520" y="92" text-anchor="middle" font-size="9" fill="#888">PostgreSQL + RLS</text>
+  <text x="520" y="107" text-anchor="middle" font-size="9" fill="#888">15 Tables</text>
+  <text x="520" y="120" text-anchor="middle" font-size="9" fill="#666">stock_quotes / news</text>
+  <text x="520" y="133" text-anchor="middle" font-size="9" fill="#666">financials / filings</text>
+  <text x="520" y="146" text-anchor="middle" font-size="9" fill="#666">profiles / recommendations</text>
+
+  <!-- Cache tables -->
+  <rect x="450" y="180" width="140" height="80" rx="8" fill="#fff" stroke="#137333" stroke-width="1.5"/>
+  <text x="520" y="200" text-anchor="middle" font-weight="700" font-size="11" fill="#137333">Analysis Cache</text>
+  <text x="520" y="216" text-anchor="middle" font-size="9" fill="#666">stock_analysis_cache</text>
+  <text x="520" y="229" text-anchor="middle" font-size="9" fill="#666">market_overview_cache</text>
+  <text x="520" y="242" text-anchor="middle" font-size="9" fill="#888">ticker + date PK</text>
+  <text x="520" y="255" text-anchor="middle" font-size="9" fill="#888">24h TTL</text>
+
+  <!-- Persona -->
+  <rect x="450" y="290" width="140" height="55" rx="8" fill="#fff" stroke="#137333" stroke-width="1.5"/>
+  <text x="520" y="310" text-anchor="middle" font-weight="700" font-size="11" fill="#137333">User Personas</text>
+  <text x="520" y="326" text-anchor="middle" font-size="9" fill="#888">8 investment traits</text>
+  <text x="520" y="339" text-anchor="middle" font-size="9" fill="#888">1~5 scale each</text>
+
+  <!-- Next.js API -->
+  <rect x="650" y="60" width="200" height="80" rx="8" fill="#fff" stroke="#c5221f" stroke-width="1.5"/>
+  <text x="750" y="80" text-anchor="middle" font-weight="700" font-size="12" fill="#c5221f">Next.js API Routes</text>
+  <text x="750" y="96" text-anchor="middle" font-size="9" fill="#666">/api/briefing — AI Briefing</text>
+  <text x="750" y="109" text-anchor="middle" font-size="9" fill="#666">/api/persona — Persona CRUD</text>
+  <text x="750" y="122" text-anchor="middle" font-size="9" fill="#666">/api/filings — SEC Filings</text>
+  <text x="750" y="135" text-anchor="middle" font-size="9" fill="#666">/api/stocks/search — On-demand</text>
+
+  <!-- Briefing Assembly -->
+  <rect x="650" y="170" width="200" height="65" rx="8" fill="#fce8e6" stroke="#c5221f" stroke-width="1.5"/>
+  <text x="750" y="192" text-anchor="middle" font-weight="700" font-size="11" fill="#c5221f">Briefing Assembly</text>
+  <text x="750" y="208" text-anchor="middle" font-size="9" fill="#888">Cache hit → instant response</text>
+  <text x="750" y="221" text-anchor="middle" font-size="9" fill="#888">Cache miss → Gemini fallback</text>
+  <text x="750" y="230" text-anchor="middle" font-size="9" fill="#888">Per-stock → compose full briefing</text>
+
+  <!-- Frontend -->
+  <rect x="650" y="270" width="200" height="70" rx="8" fill="#fff" stroke="#c5221f" stroke-width="1.5"/>
+  <text x="750" y="292" text-anchor="middle" font-weight="700" font-size="12" fill="#c5221f">Next.js Frontend</text>
+  <text x="750" y="308" text-anchor="middle" font-size="9" fill="#888">Tailwind CSS 4 + TypeScript</text>
+  <text x="750" y="321" text-anchor="middle" font-size="9" fill="#888">Mobile WebView (375px)</text>
+  <text x="750" y="334" text-anchor="middle" font-size="9" fill="#888">Portfolio + Persona UI</text>
+
+  <!-- Vercel -->
+  <rect x="650" y="370" width="200" height="45" rx="8" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="750" y="392" text-anchor="middle" font-weight="700" font-size="12" fill="#333">Vercel (Hobby)</text>
+  <text x="750" y="407" text-anchor="middle" font-size="9" fill="#888">securitya.vercel.app</text>
+
+  <!-- User -->
+  <rect x="700" y="445" width="100" height="45" rx="22" fill="#4a6cf7" stroke="none"/>
+  <text x="750" y="472" text-anchor="middle" font-weight="700" font-size="12" fill="#fff">User</text>
+
+  <!-- ===== Arrows ===== -->
+  <!-- Finnhub → collect-finnhub -->
+  <line x1="190" y1="90" x2="245" y2="85" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+  <!-- SEC → collect-sec -->
+  <line x1="190" y1="183" x2="245" y2="182" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+  <!-- collect-finnhub → Supabase -->
+  <line x1="390" y1="87" x2="445" y2="95" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+  <!-- collect-sec → Supabase -->
+  <line x1="390" y1="180" x2="445" y2="140" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+
+  <!-- collect-finnhub → generate-analysis (chain) -->
+  <line x1="320" y1="115" x2="320" y2="245" stroke="#4a6cf7" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#ah-blue)"/>
+  <text x="332" y="185" font-size="8" fill="#4a6cf7">chain</text>
+
+  <!-- Gemini → generate-analysis -->
+  <line x1="190" y1="355" x2="250" y2="295" stroke="#c5221f" stroke-width="1.2" stroke-dasharray="3" marker-end="url(#ah)"/>
+
+  <!-- generate-analysis → Cache -->
+  <line x1="390" y1="282" x2="445" y2="230" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+
+  <!-- Supabase → API Routes -->
+  <line x1="590" y1="105" x2="645" y2="100" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+  <!-- Cache → Briefing Assembly -->
+  <line x1="590" y1="220" x2="645" y2="200" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+  <!-- Persona → Briefing Assembly -->
+  <line x1="590" y1="310" x2="645" y2="210" stroke="#888" stroke-width="1.2" stroke-dasharray="3" marker-end="url(#ah)"/>
+
+  <!-- API → Frontend -->
+  <line x1="750" y1="140" x2="750" y2="265" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+  <!-- Frontend → Vercel -->
+  <line x1="750" y1="340" x2="750" y2="365" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+  <!-- Vercel → User -->
+  <line x1="750" y1="415" x2="750" y2="440" stroke="#888" stroke-width="1.2" marker-end="url(#ah)"/>
+
+  <!-- Gemini → Briefing Assembly (fallback) -->
+  <path d="M110,395 L110,480 L640,480 L640,210 L645,210" fill="none" stroke="#c5221f" stroke-width="1.2" stroke-dasharray="4" marker-end="url(#ah)"/>
+  <text x="380" y="474" font-size="8" fill="#c5221f">cache miss → Gemini fallback</text>
+
+  <!-- 550 stocks → collect-finnhub -->
+  <line x1="190" y1="270" x2="250" y2="95" stroke="#888" stroke-width="1" stroke-dasharray="3" marker-end="url(#ah)"/>
+</svg>
+</div>
+
+</body>
+</html>
