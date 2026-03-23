@@ -80,6 +80,7 @@ export interface SecFiling {
   title: string;
   accessionNumber: string;
   url: string;
+  items?: string;
 }
 
 export interface DailyBriefing {

@@ -23,7 +23,7 @@ function isExpired(updatedAt: string | null): boolean {
 /** Tier 3 종목 조회 (없으면 Finnhub에서 가져와서 DB에 저장) */
 export async function getOrFetchTier3Stock(
   ticker: string
-): Promise<TieredStock | null> {
+): Promise<(TieredStock & { logoUrl?: string }) | null> {
   const upperTicker = ticker.toUpperCase();
 
   // Tier 1/2/3에 있으면 그냥 반환 (on-demand 불필요)
@@ -35,7 +35,7 @@ export async function getOrFetchTier3Stock(
   // DB에서 조회
   const { data: existing } = await supabase
     .from("stock_profiles")
-    .select("ticker, name, name_kr, updated_at")
+    .select("ticker, name, name_kr, logo_url, updated_at")
     .eq("ticker", upperTicker)
     .single();
 
@@ -51,6 +51,7 @@ export async function getOrFetchTier3Stock(
       name: existing.name ?? upperTicker,
       nameKr: existing.name_kr ?? upperTicker,
       tier: 3,
+      logoUrl: existing.logo_url ?? undefined,
     };
   }
 
@@ -99,6 +100,7 @@ export async function getOrFetchTier3Stock(
     name: profile.name,
     nameKr: profile.name,
     tier: 3,
+    logoUrl: profile.logoUrl || undefined,
   };
 }
 

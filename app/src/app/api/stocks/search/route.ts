@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import { getAllStocks, getTierForTicker } from "@/lib/stock-tiers";
+import { getAllStocks } from "@/lib/stock-tiers";
 import { getOrFetchTier3Stock } from "@/lib/tier3-ondemand";
+import { supabase } from "@/lib/supabase";
 
 /**
  * GET /api/stocks/search?q=TICKER
@@ -27,6 +28,17 @@ export async function GET(request: NextRequest) {
     )
     .slice(0, 20);
 
+  // 로고 URL 조회
+  const resultTickers = localResults.map((s) => s.ticker);
+  const { data: profiles } = await supabase
+    .from("stock_profiles")
+    .select("ticker, logo_url")
+    .in("ticker", resultTickers);
+  const logoMap: Record<string, string> = {};
+  for (const p of profiles ?? []) {
+    if (p.logo_url) logoMap[p.ticker] = p.logo_url;
+  }
+
   // 정확한 티커 매치가 없고, 쿼리가 티커 형식(영문 1~5자)이면 Tier 3 시도
   const exactMatch = allStocks.find((s) => s.ticker === upperQuery);
   if (!exactMatch && /^[A-Z]{1,5}$/.test(upperQuery)) {
@@ -34,8 +46,8 @@ export async function GET(request: NextRequest) {
     if (tier3Stock) {
       return Response.json({
         results: [
-          { ticker: tier3Stock.ticker, name: tier3Stock.name, nameKr: tier3Stock.nameKr, tier: 3 },
-          ...localResults.map((s) => ({ ticker: s.ticker, name: s.name, nameKr: s.nameKr, tier: s.tier })),
+          { ticker: tier3Stock.ticker, name: tier3Stock.name, nameKr: tier3Stock.nameKr, tier: 3, logoUrl: tier3Stock.logoUrl },
+          ...localResults.map((s) => ({ ticker: s.ticker, name: s.name, nameKr: s.nameKr, tier: s.tier, logoUrl: logoMap[s.ticker] })),
         ],
       });
     }
@@ -47,6 +59,7 @@ export async function GET(request: NextRequest) {
       name: s.name,
       nameKr: s.nameKr,
       tier: s.tier,
+      logoUrl: logoMap[s.ticker],
     })),
   });
 }

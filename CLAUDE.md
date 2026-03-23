@@ -116,8 +116,8 @@ market_overview_cache: analysis_date(PK), greeting, market_overview, macro_alert
 
 ## 참고 문서
 
-- `docs/proposal-executive-summary.md` — 과제 제출용 요약
-- `docs/proposal-detailed.md` — 면접 대비 상세 제안서
+- `docs/proposal-executive-summary.md` — 서비스 요약
+- `docs/proposal-detailed.md` — 상세 제안서
 - `docs/DEVELOPMENT-SPEC.md` — 기술 스펙 상세
 - `docs/DATA-CATALOG.md` — DB 테이블 전체 스키마 카탈로그
 - `docs/api-reference.md` — API 엔드포인트 상세

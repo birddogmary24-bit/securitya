@@ -1,4 +1,5 @@
 import { SecFiling } from "./types";
+import { buildFilingTitle } from "./sec-filing-titles";
 
 const SEC_USER_AGENT = "SecurityA-AIBriefing admin@example.com";
 const FILING_TYPES = ["10-K", "10-Q", "8-K"];
@@ -62,7 +63,7 @@ export async function fetchRecentFilings(
     const filedDate: string = recent.filingDate[i];
     const accessionNumber: string = recent.accessionNumber[i];
     const primaryDoc: string = recent.primaryDocument?.[i] ?? "";
-    const description: string = recent.primaryDocDescription?.[i] ?? form;
+    const items: string = recent.items?.[i] ?? "";
 
     // 10-K, 10-Q, 8-K만 필터
     if (!FILING_TYPES.includes(form)) continue;
@@ -77,9 +78,10 @@ export async function fetchRecentFilings(
       cik,
       filingType: form,
       filedDate,
-      title: description,
+      title: buildFilingTitle(form, items),
       accessionNumber,
       url: filingUrl,
+      items: items || undefined,
     });
   }
 

@@ -10,14 +10,14 @@
 ## 2026-03-21 | 1차 세션 — 프로젝트 초기 셋업, 기획 문서 완성, Superpowers 설치
 
 ### 작업 요약
-A증권사 AI Content PM 채용 과제 착수. 기획 문서 2종(executive summary, detailed proposal) 완성. Superpowers 글로벌 설치. 프로젝트 문서 구조 정비.
+AI 미국주식 브리핑 서비스 착수. 기획 문서 2종(executive summary, detailed proposal) 완성. Superpowers 글로벌 설치. 프로젝트 문서 구조 정비.
 
 ### 주요 작업
 
 | # | 작업 | 내용 |
 |---|------|------|
-| 1 | 기획 문서 작성 | `proposal-executive-summary.md` — 과제 제출용 1~2p 요약 |
-| 2 | 기획 문서 작성 | `proposal-detailed.md` — 면접 대비 상세 제안서 (문제정의, 경쟁분석, 와이어프레임) |
+| 1 | 기획 문서 작성 | `proposal-executive-summary.md` — 서비스 요약 1~2p |
+| 2 | 기획 문서 작성 | `proposal-detailed.md` — 상세 제안서 (문제정의, 경쟁분석, 와이어프레임) |
 | 3 | 개발 스펙 작성 | `DEVELOPMENT-SPEC.md` — 기술스택, API, Phase별 개발 계획 |
 | 4 | 경쟁사 분석 | `competitor-analysis.md` — 토스, 미래에셋 등 경쟁 서비스 분석 |
 | 5 | Superpowers 설치 | GitHub 클론 → `~/.claude/skills/` 글로벌 복사 (전 프로젝트 적용) |

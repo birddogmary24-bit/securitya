@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BriefingCard as BriefingCardType } from "@/lib/types";
+import StockLogo from "./StockLogo";
 
 const sentimentConfig = {
   positive: { bg: "bg-green-50", border: "border-green-200", badge: "bg-green-100 text-green-700", label: "긍정", dot: "bg-green-500" },
@@ -18,9 +19,10 @@ export default function BriefingCard({ card }: { card: BriefingCardType }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${config.dot}`} />
+          <StockLogo ticker={card.ticker} logoUrl={card.logoUrl} size={24} />
           <span className="font-semibold text-[15px] text-[#191919]">{card.nameKr}</span>
           <span className="text-xs text-gray-400">{card.ticker}</span>
+          <span className={`w-2 h-2 rounded-full ${config.dot}`} />
         </div>
         <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${config.badge}`}>
           {config.label}

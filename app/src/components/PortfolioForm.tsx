@@ -6,6 +6,7 @@ import { StockHolding, POPULAR_STOCKS } from "@/lib/types";
 import { getAllStocks } from "@/lib/stock-tiers";
 import { getPortfolio, savePortfolio } from "@/lib/portfolio";
 import { hasPersona } from "@/lib/persona";
+import StockLogo from "./StockLogo";
 
 export default function PortfolioForm() {
   const router = useRouter();
@@ -76,9 +77,7 @@ export default function PortfolioForm() {
                 className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#FEE500]/20 flex items-center justify-center text-xs font-bold text-[#191919]">
-                    {holding.ticker.slice(0, 2)}
-                  </div>
+                  <StockLogo ticker={holding.ticker} logoUrl={holding.logoUrl} size={36} />
                   <div>
                     <p className="text-sm font-medium text-[#191919]">{holding.nameKr}</p>
                     <p className="text-xs text-gray-400">{holding.ticker}</p>
@@ -136,9 +135,7 @@ export default function PortfolioForm() {
               className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-500">
-                  {stock.ticker.slice(0, 2)}
-                </div>
+                <StockLogo ticker={stock.ticker} size={32} />
                 <div>
                   <p className="text-sm text-[#191919]">{stock.nameKr}</p>
                   <p className="text-xs text-gray-400">{stock.ticker}</p>

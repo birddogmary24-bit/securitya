@@ -2,7 +2,7 @@
 
 > **최종 업데이트:** 2026-03-22
 >
-> A증권사 AI Content PM 채용 과제 프로토타입.
+> AI 미국주식 브리핑 서비스 프로토타입.
 > A사 앱에서 웹뷰(Add-on) 방식으로 접근하는 웹 서비스.
 
 ---
@@ -169,8 +169,8 @@ A사 앱
 ---
 
 ## 참고 문서
-- `proposal-executive-summary.md` — 과제 제출용 1~2페이지 요약
-- `proposal-detailed.md` — 면접 대비 상세 제안서 (문제 정의, 경쟁 분석, 와이어프레임 등)
+- `proposal-executive-summary.md` — 서비스 요약 (1~2페이지)
+- `proposal-detailed.md` — 상세 제안서 (문제 정의, 경쟁 분석, 와이어프레임 등)
 - 인사이트 재료: `/Users/wayne/.claude/plans/silly-whistling-parrot.md`
 
 ## 디자인 참고
