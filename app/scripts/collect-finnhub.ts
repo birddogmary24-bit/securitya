@@ -12,6 +12,7 @@ import { getFullCollectionStocks, getBasicCollectionStocks } from "../src/lib/st
 import { supabase } from "../src/lib/supabase";
 import {
   fetchQuote,
+  fetchCompanyProfile,
   fetchCompanyNews,
   fetchGeneralNews,
   fetchBasicFinancials,
@@ -53,6 +54,14 @@ async function main() {
   console.log(`=== Finnhub 수집 시작: ${today} ===`);
   console.log(`총 ${allStocks.length}종목 (Full: ${fullStocks.length}, Basic: ${basicStocks.length})`);
 
+  // 프로필이 없는 종목 파악
+  const { data: existingProfiles } = await supabase
+    .from("stock_profiles")
+    .select("ticker");
+  const profileExists = new Set((existingProfiles ?? []).map((p) => p.ticker));
+  console.log(`기존 프로필: ${profileExists.size}종목, 신규 수집 대상: ${allStocks.length - profileExists.size}종목`);
+
+  let profilesOk = 0;
   let quotesOk = 0;
   let newsOk = 0;
   let financialsOk = 0;
@@ -83,6 +92,28 @@ async function main() {
           { onConflict: "ticker" }
         );
         if (!error) quotesOk++;
+      }
+
+      // Profile (logo_url 포함) — DB에 없을 때만 수집
+      if (!profileExists.has(ticker)) {
+        const profile = await fetchCompanyProfile(ticker);
+        if (profile) {
+          const { error } = await supabase.from("stock_profiles").upsert(
+            {
+              ticker,
+              name: profile.name,
+              name_kr: stock.nameKr !== ticker ? stock.nameKr : profile.name,
+              sector: profile.sector,
+              market_cap: profile.marketCap,
+              logo_url: profile.logoUrl,
+              website_url: profile.websiteUrl,
+              tier: stock.tier,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "ticker" }
+          );
+          if (!error) profilesOk++;
+        }
       }
 
       // News (all tiers)
@@ -236,7 +267,7 @@ async function main() {
   }
 
   console.log(`\n=== 수집 완료 ===`);
-  console.log(`Quotes: ${quotesOk}, News: ${newsOk}, Financials: ${financialsOk}`);
+  console.log(`Profiles: ${profilesOk}, Quotes: ${quotesOk}, News: ${newsOk}, Financials: ${financialsOk}`);
   console.log(`Recommendations: ${recsOk}, Price targets: ${ptOk}, Insider: ${insiderOk}`);
   console.log(`Errors: ${errors}`);
 
