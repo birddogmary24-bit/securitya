@@ -59,6 +59,7 @@ function FilingsContent() {
 
   // AI 요약 상태
   const [summaries, setSummaries] = useState<Record<string, string>>({});
+  const [summaryMeta, setSummaryMeta] = useState<Record<string, { cached: boolean; model?: string }>>({});
   const [summarizing, setSummarizing] = useState<string | null>(null);
   const [summaryCount, setSummaryCount] = useState(0);
   const [expandedFiling, setExpandedFiling] = useState<string | null>(null);
@@ -120,8 +121,11 @@ function FilingsContent() {
       if (data.error) throw new Error(data.error);
 
       setSummaries((prev) => ({ ...prev, [key]: data.summary }));
-      const newCount = incrementSummaryCount();
-      setSummaryCount(newCount);
+      setSummaryMeta((prev) => ({ ...prev, [key]: { cached: !!data.cached, model: data.model } }));
+      if (!data.cached) {
+        const newCount = incrementSummaryCount();
+        setSummaryCount(newCount);
+      }
     } catch (err) {
       setSummaries((prev) => ({
         ...prev,
@@ -297,6 +301,11 @@ function FilingsContent() {
                               <p className="text-[12px] text-[#191919] leading-relaxed whitespace-pre-wrap">
                                 {summaries[key]}
                               </p>
+                              {summaryMeta[key] && (
+                                <p className="text-[10px] text-gray-400 mt-2 text-right">
+                                  {summaryMeta[key].cached ? "⚡ 캐시" : "✨ 새로 생성"}{summaryMeta[key].model ? ` · ${summaryMeta[key].model}` : ""}
+                                </p>
+                              )}
                             </div>
                           </div>
                         )}
