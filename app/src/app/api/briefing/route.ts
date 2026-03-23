@@ -86,6 +86,7 @@ async function fetchMarketData(tickers: string[]): Promise<{
   quotes: Record<string, StockQuote>;
   news: NewsItem[];
   filings: SecFiling[];
+  logoUrls: Record<string, string>;
   dataSource: "supabase" | "mock";
 }> {
   try {
@@ -93,11 +94,12 @@ async function fetchMarketData(tickers: string[]): Promise<{
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
 
-    const [quotesRes, newsRes, filingsRes] = await Promise.all([
+    const [quotesRes, newsRes, filingsRes, profilesRes] = await Promise.all([
       supabase.from("stock_quotes").select("*").in("ticker", tickers),
       supabase.from("stock_news").select("*").order("published_at", { ascending: false }).limit(20),
       supabase.from("sec_filings").select("*").in("ticker", tickers)
         .gte("filed_date", thirtyDaysAgoStr).order("filed_date", { ascending: false }).limit(20),
+      supabase.from("stock_profiles").select("ticker, logo_url").in("ticker", tickers),
     ]);
 
     const quotesData = quotesRes.data;
@@ -139,9 +141,14 @@ async function fetchMarketData(tickers: string[]): Promise<{
       url: f.url,
     }));
 
-    return { quotes, news, filings, dataSource: "supabase" };
+    const logoUrls: Record<string, string> = {};
+    for (const p of profilesRes.data ?? []) {
+      if (p.logo_url) logoUrls[p.ticker] = p.logo_url;
+    }
+
+    return { quotes, news, filings, logoUrls, dataSource: "supabase" };
   } catch {
-    return { quotes: MOCK_QUOTES, news: MOCK_NEWS, filings: [], dataSource: "mock" };
+    return { quotes: MOCK_QUOTES, news: MOCK_NEWS, filings: [], logoUrls: {}, dataSource: "mock" };
   }
 }
 
@@ -207,19 +214,21 @@ export async function POST(request: NextRequest) {
       fetchMarketData(tickers),
     ]);
 
-    const { quotes, news, filings, dataSource } = marketData;
+    const { quotes, news, filings, logoUrls, dataSource } = marketData;
 
     // 2. 캐시 HIT/MISS 분리
     const cachedTickers = Object.keys(cachedAnalysis);
 
     // 3. 포트폴리오 순서대로 카드 조합
     const cards: BriefingCard[] = portfolio.map((h) => {
+      const logoUrl = logoUrls[h.ticker] || undefined;
       const analysis = cachedAnalysis[h.ticker];
       if (analysis) {
         // 캐시 HIT — 사전 생성된 AI 분석 사용
         return {
           ticker: h.ticker,
           nameKr: h.nameKr,
+          logoUrl,
           sentiment: analysis.sentiment as "positive" | "negative" | "neutral",
           summary: analysis.summary,
           keyPoints: analysis.keyPoints,
@@ -230,7 +239,9 @@ export async function POST(request: NextRequest) {
         };
       }
       // 캐시 MISS — fallback 카드
-      return buildSingleFallbackCard(h, quotes, news, filings);
+      const fallback = buildSingleFallbackCard(h, quotes, news, filings);
+      fallback.logoUrl = logoUrl;
+      return fallback;
     });
 
     // 4. 결과 조합
