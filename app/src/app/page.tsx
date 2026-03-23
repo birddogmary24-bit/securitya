@@ -77,14 +77,14 @@ export default function HomePage() {
     setPersona(getPersona());
   }, []);
 
-  const fetchBriefing = useCallback(async (holdings: StockHolding[], userPersona: Persona | null) => {
+  const fetchBriefing = useCallback(async (holdings: StockHolding[], userPersona: Persona | null, forceRefresh = false) => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/briefing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portfolio: holdings, persona: userPersona }),
+        body: JSON.stringify({ portfolio: holdings, persona: userPersona, forceRefresh }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -136,11 +136,11 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Generated time + data source */}
+          {/* Generated time + data source + cache status */}
           {briefing && (
             <div className="text-[11px] text-gray-400 space-y-0.5">
-              <p>🕐 생성 시각: {briefing.generatedAt} KST</p>
-              <p>📂 데이터 출처: {briefing.source === "gemini" ? `Gemini 1.5 Flash (AI 분석) · ${briefing.dataSource === "supabase" ? "Supabase DB" : "Mock 주가/뉴스"}` : "Mock 데이터 (실시간 미연동)"}</p>
+              <p>🕐 생성 시각: {briefing.generatedAt} KST{briefing.cached ? ` (캐시 · ${briefing.cachedAt} 저장)` : ""}</p>
+              <p>📂 데이터 출처: {briefing.source === "gemini" ? `Gemini 2.5 Flash (AI 분석) · ${briefing.dataSource === "supabase" ? "Supabase DB" : "Mock 주가/뉴스"}` : "Mock 데이터 (실시간 미연동)"}</p>
             </div>
           )}
 
@@ -186,12 +186,22 @@ export default function HomePage() {
               </div>
 
               {/* Refresh */}
-              <button
-                onClick={() => fetchBriefing(portfolio, persona)}
-                className="w-full py-2.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                브리핑 새로고침
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => fetchBriefing(portfolio, persona)}
+                  className="flex-1 py-2.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  브리핑 새로고침
+                </button>
+                {briefing.cached && (
+                  <button
+                    onClick={() => fetchBriefing(portfolio, persona, true)}
+                    className="py-2.5 px-4 text-sm text-blue-500 hover:text-blue-700 transition-colors font-medium"
+                  >
+                    AI 새로 생성
+                  </button>
+                )}
+              </div>
             </>
           ) : null}
         </div>

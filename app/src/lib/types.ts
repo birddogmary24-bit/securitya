@@ -37,6 +37,7 @@ export interface StockHolding {
   nameKr: string;
   quantity: number;
   avgPrice?: number;
+  logoUrl?: string;
 }
 
 export interface StockQuote {
@@ -60,6 +61,7 @@ export interface NewsItem {
 export interface BriefingCard {
   ticker: string;
   nameKr: string;
+  logoUrl?: string;
   sentiment: "positive" | "negative" | "neutral";
   summary: string;
   keyPoints: string[];
