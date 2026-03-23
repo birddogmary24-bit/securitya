@@ -32,6 +32,7 @@ async function main() {
       title: f.title,
       accession_number: f.accessionNumber,
       url: f.url,
+      items: f.items || null,
     }));
 
     const { error: upsertError } = await supabase
