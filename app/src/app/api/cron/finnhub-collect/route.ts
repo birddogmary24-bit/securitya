@@ -4,6 +4,7 @@ import { TIER1_STOCKS, TIER2_STOCKS, TIER3_STOCKS, TieredStock, getFullCollectio
 import { getActiveTier3Tickers } from "@/lib/tier3-ondemand";
 import {
   fetchQuote,
+  fetchCompanyProfile,
   fetchCompanyNews,
   fetchGeneralNews,
   fetchBasicFinancials,
@@ -184,6 +185,15 @@ export async function GET(request: NextRequest) {
     // Process per-stock chunk
     const fromDate = dateNDaysAgo(7);
     const toDate = todayKST();
+    // 프로필이 없는 종목만 수집 대상으로 선정
+    const chunkTickers = chunk.map((s) => s.ticker);
+    const { data: existingProfiles } = await supabase
+      .from("stock_profiles")
+      .select("ticker")
+      .in("ticker", chunkTickers);
+    const profileExists = new Set((existingProfiles ?? []).map((p) => p.ticker));
+
+    let profilesProcessed = 0;
     let quotesProcessed = 0;
     let newsProcessed = 0;
     let financialsProcessed = 0;
@@ -213,6 +223,31 @@ export async function GET(request: NextRequest) {
           );
         if (error) console.error(`quote upsert error (${ticker}):`, error);
         else quotesProcessed++;
+      }
+
+      // Profile (logo_url 포함) — DB에 없을 때만 수집
+      if (!profileExists.has(ticker)) {
+        const profile = await fetchCompanyProfile(ticker);
+        if (profile) {
+          const { error } = await supabase
+            .from("stock_profiles")
+            .upsert(
+              {
+                ticker,
+                name: profile.name,
+                name_kr: stock.nameKr !== ticker ? stock.nameKr : profile.name,
+                sector: profile.sector,
+                market_cap: profile.marketCap,
+                logo_url: profile.logoUrl,
+                website_url: profile.websiteUrl,
+                tier: stock.tier,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "ticker" }
+            );
+          if (error) console.error(`profile upsert error (${ticker}):`, error);
+          else profilesProcessed++;
+        }
       }
 
       // Tier 1 & 2: company news
@@ -336,6 +371,7 @@ export async function GET(request: NextRequest) {
       total_stocks: allStocks.length,
       remaining: allStocks.length - newOffset,
       processed: {
+        profiles: profilesProcessed,
         quotes: quotesProcessed,
         news: newsProcessed,
         financials: financialsProcessed,
