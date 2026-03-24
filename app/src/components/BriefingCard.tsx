@@ -69,7 +69,7 @@ export default function BriefingCard({ card }: { card: BriefingCardType }) {
 
   // 유머 제안 (sentiment 기반)
   const humorAction = card.sentiment === "positive"
-    ? "사거에요? 🐕"
+    ? "살거에요? 🐕"
     : card.sentiment === "negative"
     ? "팔거에요? 🐕"
     : "홀딩해요? 🐕";
