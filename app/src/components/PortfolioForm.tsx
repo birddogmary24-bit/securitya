@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { StockHolding, POPULAR_STOCKS } from "@/lib/types";
+import { StockHolding } from "@/lib/types";
 import { getAllStocks } from "@/lib/stock-tiers";
 import { getPortfolio, savePortfolio } from "@/lib/portfolio";
 import { hasPersona } from "@/lib/persona";
 import StockLogo from "./StockLogo";
+
+const PAGE_SIZE = 50;
 
 export default function PortfolioForm() {
   const router = useRouter();
@@ -14,31 +16,25 @@ export default function PortfolioForm() {
   const [search, setSearch] = useState("");
   const [saved, setSaved] = useState(false);
   const [logoMap, setLogoMap] = useState<Record<string, string>>({});
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // 로고 URL 일괄 조회
-  const fetchLogos = useCallback(async (tickers: string[]) => {
-    if (tickers.length === 0) return;
+  // 전체 로고 URL 조회 (파라미터 없이 전체 반환)
+  const fetchLogos = useCallback(async () => {
     try {
-      const res = await fetch(`/api/stocks/logos?tickers=${tickers.join(",")}`);
+      const res = await fetch("/api/stocks/logos");
       const data = await res.json();
-      if (data.logos) {
-        setLogoMap((prev) => ({ ...prev, ...data.logos }));
-      }
+      if (data.logos) setLogoMap(data.logos);
     } catch {
       // 로고 로드 실패해도 UI는 정상 동작
     }
   }, []);
 
   useEffect(() => {
-    const saved = getPortfolio();
-    setPortfolio(saved);
-
-    // 전체 250종목 로고 한번에 조회
-    const allTickers = getAllStocks().map((s) => s.ticker);
-    fetchLogos(allTickers);
+    setPortfolio(getPortfolio());
+    fetchLogos();
   }, [fetchLogos]);
 
-  // 검색 시 250종목 전체에서 검색, 미검색 시 인기 10종목 표시
+  // 검색 시 필터링, 미검색 시 전체 목록
   const allStocksList = getAllStocks().map((s) => ({
     ticker: s.ticker,
     name: s.name,
@@ -46,18 +42,29 @@ export default function PortfolioForm() {
     quantity: 0,
   }));
 
-  const filteredStocks = (search ? allStocksList : POPULAR_STOCKS).filter(
+  const filteredStocks = allStocksList.filter(
     (s) =>
       !portfolio.some((p) => p.ticker === s.ticker) &&
-      (s.ticker.toLowerCase().includes(search.toLowerCase()) ||
+      (!search ||
+        s.ticker.toLowerCase().includes(search.toLowerCase()) ||
         s.nameKr.includes(search) ||
         s.name.toLowerCase().includes(search.toLowerCase()))
   );
+
+  // 검색어 변경 시 visibleCount 리셋
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setVisibleCount(PAGE_SIZE);
+  };
+
+  const visibleStocks = filteredStocks.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredStocks.length;
 
   function addStock(stock: StockHolding) {
     const updated = [...portfolio, { ...stock, quantity: 1, logoUrl: logoMap[stock.ticker] }];
     setPortfolio(updated);
     setSearch("");
+    setVisibleCount(PAGE_SIZE);
   }
 
   function removeStock(ticker: string) {
@@ -65,7 +72,6 @@ export default function PortfolioForm() {
   }
 
   function handleSave() {
-    // 저장 시 logoUrl도 함께 저장
     const withLogos = portfolio.map((h) => ({
       ...h,
       logoUrl: h.logoUrl || logoMap[h.ticker],
@@ -80,7 +86,7 @@ export default function PortfolioForm() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-20">
       {/* Current Portfolio */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">
         <h3 className="text-sm font-semibold text-[#191919] mb-3">내 관심종목</h3>
@@ -124,11 +130,11 @@ export default function PortfolioForm() {
           type="text"
           placeholder="종목명 또는 티커 검색"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FEE500] focus:ring-1 focus:ring-[#FEE500]/50 placeholder:text-gray-300"
         />
         <div className="mt-2 space-y-1">
-          {filteredStocks.slice(0, 8).map((stock) => (
+          {visibleStocks.map((stock) => (
             <button
               key={stock.ticker}
               onClick={() => addStock(stock)}
@@ -144,23 +150,33 @@ export default function PortfolioForm() {
               <span className="text-[#FEE500] text-lg">+</span>
             </button>
           ))}
+          {hasMore && (
+            <button
+              onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              className="w-full py-3 text-sm font-medium text-gray-500 hover:text-[#191919] transition-colors"
+            >
+              더보기 ({filteredStocks.length - visibleCount}개 남음)
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Save Button */}
-      <button
-        onClick={handleSave}
-        disabled={portfolio.length === 0}
-        className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
-          portfolio.length === 0
-            ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-            : saved
-            ? "bg-green-500 text-white"
-            : "bg-[#FEE500] text-[#191919] active:scale-[0.98]"
-        }`}
-      >
-        {saved ? "저장 완료!" : "관심종목 저장"}
-      </button>
+      {/* Fixed Save Button */}
+      <div className="fixed bottom-14 left-0 right-0 z-40 max-w-[430px] mx-auto px-4 pb-3 pt-2 bg-gradient-to-t from-[#f7f8fa] via-[#f7f8fa] to-transparent">
+        <button
+          onClick={handleSave}
+          disabled={portfolio.length === 0}
+          className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
+            portfolio.length === 0
+              ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+              : saved
+              ? "bg-green-500 text-white"
+              : "bg-[#FEE500] text-[#191919] active:scale-[0.98]"
+          }`}
+        >
+          {saved ? "저장 완료!" : "관심종목 저장"}
+        </button>
+      </div>
     </div>
   );
 }

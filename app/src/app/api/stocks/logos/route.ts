@@ -2,24 +2,25 @@ import { NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 /**
+ * GET /api/stocks/logos
  * GET /api/stocks/logos?tickers=AAPL,MSFT,NVDA
- * Returns a map of ticker → logoUrl from stock_profiles
+ *
+ * tickers 없으면 stock_profiles 전체 로고 반환
  */
 export async function GET(request: NextRequest) {
-  const tickers = request.nextUrl.searchParams.get("tickers");
-  if (!tickers) {
-    return Response.json({ logos: {} });
+  const tickersParam = request.nextUrl.searchParams.get("tickers");
+
+  let query = supabase.from("stock_profiles").select("ticker, logo_url").not("logo_url", "is", null);
+
+  if (tickersParam) {
+    const tickerList = tickersParam.split(",").map((t) => t.trim().toUpperCase()).filter(Boolean);
+    if (tickerList.length === 0) {
+      return Response.json({ logos: {} });
+    }
+    query = query.in("ticker", tickerList);
   }
 
-  const tickerList = tickers.split(",").map((t) => t.trim().toUpperCase()).filter(Boolean);
-  if (tickerList.length === 0) {
-    return Response.json({ logos: {} });
-  }
-
-  const { data: profiles } = await supabase
-    .from("stock_profiles")
-    .select("ticker, logo_url")
-    .in("ticker", tickerList);
+  const { data: profiles } = await query.limit(1000);
 
   const logos: Record<string, string> = {};
   for (const p of profiles ?? []) {
