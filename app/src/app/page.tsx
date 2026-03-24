@@ -49,9 +49,9 @@ function EmptyPortfolio() {
           <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       </div>
-      <h2 className="text-lg font-semibold text-[#191919] mb-2">포트폴리오를 설정해주세요</h2>
+      <h2 className="text-lg font-semibold text-[#191919] mb-2">관심종목을 등록해주세요</h2>
       <p className="text-sm text-gray-400 mb-6">
-        보유 종목을 등록하면 맞춤형 AI 브리핑을 받을 수 있어요
+        관심 종목을 등록하면 맞춤형 AI 브리핑을 받을 수 있어요
       </p>
       <button
         onClick={() => router.push("/portfolio")}

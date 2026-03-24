@@ -61,20 +61,20 @@ export default function PortfolioForm() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Current Portfolio */}
-      <div>
-        <h3 className="text-sm font-semibold text-[#191919] mb-3">내 보유종목</h3>
+      <div className="bg-white rounded-2xl border border-gray-200 p-4">
+        <h3 className="text-sm font-semibold text-[#191919] mb-3">내 관심종목</h3>
         {portfolio.length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-xl">
-            보유종목을 추가해주세요
+            관심종목을 추가해주세요
           </div>
         ) : (
           <div className="space-y-2">
             {portfolio.map((holding) => (
               <div
                 key={holding.ticker}
-                className="flex items-center justify-between bg-white rounded-xl border border-gray-100 px-4 py-3"
+                className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3"
               >
                 <div className="flex items-center gap-3">
                   <StockLogo ticker={holding.ticker} logoUrl={holding.logoUrl} size={36} />
@@ -83,34 +83,15 @@ export default function PortfolioForm() {
                     <p className="text-xs text-gray-400">{holding.ticker}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center border border-gray-200 rounded-lg">
-                    <button
-                      onClick={() => updateQuantity(holding.ticker, holding.quantity - 1)}
-                      className="px-2 py-1 text-gray-400 text-sm"
-                    >
-                      -
-                    </button>
-                    <span className="px-2 text-sm font-medium min-w-[32px] text-center">
-                      {holding.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(holding.ticker, holding.quantity + 1)}
-                      className="px-2 py-1 text-gray-400 text-sm"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => removeStock(holding.ticker)}
-                    className="text-gray-300 hover:text-red-400 transition-colors ml-1"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </div>
+                <button
+                  onClick={() => removeStock(holding.ticker)}
+                  className="text-gray-300 hover:text-red-400 transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               </div>
             ))}
           </div>
@@ -118,7 +99,7 @@ export default function PortfolioForm() {
       </div>
 
       {/* Search & Add */}
-      <div>
+      <div className="bg-white rounded-2xl border border-gray-200 p-4">
         <h3 className="text-sm font-semibold text-[#191919] mb-3">종목 추가</h3>
         <input
           type="text"
@@ -159,7 +140,7 @@ export default function PortfolioForm() {
             : "bg-[#FEE500] text-[#191919] active:scale-[0.98]"
         }`}
       >
-        {saved ? "저장 완료!" : "포트폴리오 저장"}
+        {saved ? "저장 완료!" : "관심종목 저장"}
       </button>
     </div>
   );

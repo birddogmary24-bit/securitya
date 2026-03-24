@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "브리핑", icon: BriefingIcon },
-  { href: "/portfolio", label: "포트폴리오", icon: PortfolioIcon },
+  { href: "/portfolio", label: "관심종목", icon: PortfolioIcon },
   { href: "/filings", label: "공시", icon: FilingsIcon },
   { href: "/persona", label: "투자성향", icon: PersonaIcon },
 ];
