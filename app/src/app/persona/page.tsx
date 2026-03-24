@@ -65,8 +65,8 @@ export default function PersonaPage() {
       </div>
 
       {showGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-10">
-          <div className="w-full max-w-[280px] bg-white rounded-2xl shadow-xl px-6 py-7">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5">
+          <div className="w-full max-w-[320px] bg-white rounded-2xl shadow-xl px-6 py-7">
             <h3 className="text-lg font-extrabold text-center text-[#191919] mb-4">
               투자성향 입력하기
             </h3>
