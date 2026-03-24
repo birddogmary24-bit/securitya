@@ -6,6 +6,7 @@ import { StockHolding } from "@/lib/types";
 import { getAllStocks } from "@/lib/stock-tiers";
 import { getPortfolio, savePortfolio } from "@/lib/portfolio";
 import { hasPersona } from "@/lib/persona";
+import { getLogos } from "@/lib/logo-cache";
 import StockLogo from "./StockLogo";
 
 const PAGE_SIZE = 50;
@@ -18,12 +19,11 @@ export default function PortfolioForm() {
   const [logoMap, setLogoMap] = useState<Record<string, string>>({});
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // 전체 로고 URL 조회 (파라미터 없이 전체 반환)
+  // 캐시 우선 로고 조회 (24h TTL, miss 시에만 API 호출)
   const fetchLogos = useCallback(async () => {
     try {
-      const res = await fetch("/api/stocks/logos");
-      const data = await res.json();
-      if (data.logos) setLogoMap(data.logos);
+      const logos = await getLogos();
+      setLogoMap(logos);
     } catch {
       // 로고 로드 실패해도 UI는 정상 동작
     }
@@ -89,9 +89,9 @@ export default function PortfolioForm() {
     <div className="space-y-4 pb-20">
       {/* Current Portfolio */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">
-        <h3 className="text-sm font-semibold text-[#191919] mb-3">내 관심종목</h3>
+        <h3 className="text-[15px] font-bold text-[#2C1810] mb-3">내 관심종목</h3>
         {portfolio.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-xl">
+          <div className="text-center py-8 text-gray-400 text-[14px] bg-[#FDF8F3] rounded-xl">
             관심종목을 추가해주세요
           </div>
         ) : (
@@ -99,13 +99,13 @@ export default function PortfolioForm() {
             {portfolio.map((holding) => (
               <div
                 key={holding.ticker}
-                className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3"
+                className="flex items-center justify-between bg-[#FDF8F3] rounded-xl px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <StockLogo ticker={holding.ticker} logoUrl={holding.logoUrl || logoMap[holding.ticker]} size={36} />
+                  <StockLogo ticker={holding.ticker} logoUrl={holding.logoUrl || logoMap[holding.ticker]} size={40} />
                   <div>
-                    <p className="text-sm font-bold text-[#191919]">{holding.nameKr}</p>
-                    <p className="text-xs text-[#191919]">{holding.ticker}</p>
+                    <p className="text-[14px] font-bold text-[#2C1810]">{holding.nameKr}</p>
+                    <p className="text-[13px] text-gray-400">{holding.ticker}</p>
                   </div>
                 </div>
                 <button
@@ -125,35 +125,35 @@ export default function PortfolioForm() {
 
       {/* Search & Add */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">
-        <h3 className="text-sm font-semibold text-[#191919] mb-3">종목 추가</h3>
+        <h3 className="text-[15px] font-bold text-[#2C1810] mb-3">종목 추가</h3>
         <input
           type="text"
           placeholder="종목명 또는 티커 검색"
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FEE500] focus:ring-1 focus:ring-[#FEE500]/50 placeholder:text-gray-300"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:border-[#B8733A] focus:ring-1 focus:ring-[#B8733A]/50 placeholder:text-gray-300"
         />
         <div className="mt-2 space-y-1">
           {visibleStocks.map((stock) => (
             <button
               key={stock.ticker}
               onClick={() => addStock(stock)}
-              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-[#FDF8F3] transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <StockLogo ticker={stock.ticker} logoUrl={logoMap[stock.ticker]} size={32} />
+                <StockLogo ticker={stock.ticker} logoUrl={logoMap[stock.ticker]} size={36} />
                 <div>
-                  <p className="text-sm text-[#191919]">{stock.nameKr}</p>
-                  <p className="text-xs text-gray-400">{stock.ticker}</p>
+                  <p className="text-[14px] text-[#2C1810] font-medium">{stock.nameKr}</p>
+                  <p className="text-[13px] text-gray-400">{stock.ticker}</p>
                 </div>
               </div>
-              <span className="text-[#FEE500] text-lg">+</span>
+              <span className="text-[#B8733A] text-xl font-bold">+</span>
             </button>
           ))}
           {hasMore && (
             <button
               onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-              className="w-full py-3 text-sm font-medium text-gray-500 hover:text-[#191919] transition-colors"
+              className="w-full py-3 text-[14px] font-medium text-gray-500 hover:text-[#B8733A] transition-colors"
             >
               더보기 ({filteredStocks.length - visibleCount}개 남음)
             </button>
@@ -162,16 +162,16 @@ export default function PortfolioForm() {
       </div>
 
       {/* Fixed Save Button */}
-      <div className="fixed bottom-14 left-0 right-0 z-40 max-w-[430px] mx-auto px-4 pb-3 pt-2 bg-gradient-to-t from-[#f7f8fa] via-[#f7f8fa] to-transparent">
+      <div className="fixed bottom-14 left-0 right-0 z-40 max-w-[430px] mx-auto px-4 pb-3 pt-2 bg-gradient-to-t from-[#FDF8F3] via-[#FDF8F3] to-transparent">
         <button
           onClick={handleSave}
           disabled={portfolio.length === 0}
-          className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
+          className={`w-full py-3.5 rounded-xl text-[14px] font-bold transition-all ${
             portfolio.length === 0
               ? "bg-gray-100 text-gray-300 cursor-not-allowed"
               : saved
               ? "bg-green-500 text-white"
-              : "bg-[#FEE500] text-[#191919] active:scale-[0.98]"
+              : "bg-[#B8733A] text-white active:scale-[0.98] shadow-sm"
           }`}
         >
           {saved ? "저장 완료!" : "관심종목 저장"}

@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
+import StockLogo from "@/components/StockLogo";
 import { SecFiling } from "@/lib/types";
 import { getPortfolio } from "@/lib/portfolio";
 
@@ -41,7 +42,7 @@ function incrementSummaryCount(): number {
 
 export default function FilingsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f7f8fa]"><Header title="SEC 공시" /><div className="flex items-center justify-center py-20"><p className="text-sm text-gray-400">로딩 중...</p></div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#FDF8F3]"><Header title="SEC 공시" /><div className="flex items-center justify-center py-20"><p className="text-sm text-gray-400">로딩 중...</p></div></div>}>
       <FilingsContent />
     </Suspense>
   );
@@ -63,6 +64,7 @@ function FilingsContent() {
   const [summarizing, setSummarizing] = useState<string | null>(null);
   const [summaryCount, setSummaryCount] = useState(0);
   const [expandedFiling, setExpandedFiling] = useState<string | null>(null);
+  const [logoMap, setLogoMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setMounted(true);
@@ -73,6 +75,10 @@ function FilingsContent() {
     if (!mounted) return;
 
     const portfolio = getPortfolio();
+    // 포트폴리오에서 로고 URL 추출
+    const logos: Record<string, string> = {};
+    portfolio.forEach((h) => { if (h.logoUrl) logos[h.ticker] = h.logoUrl; });
+    setLogoMap(logos);
     if (portfolio.length === 0) {
       setLoading(false);
       return;
@@ -153,7 +159,7 @@ function FilingsContent() {
   const remaining = DAILY_LIMIT - summaryCount;
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] pb-20">
+    <div className="min-h-screen bg-[#FDF8F3] pb-20">
       <Header title="SEC 공시" />
 
       <div className="px-4 py-4 space-y-4">
@@ -166,7 +172,7 @@ function FilingsContent() {
                 onClick={() => setFilter(type)}
                 className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                   filter === type
-                    ? "bg-[#191919] text-white"
+                    ? "bg-[#B8733A] text-white"
                     : "bg-white text-gray-500 border border-gray-200"
                 }`}
               >
@@ -185,7 +191,7 @@ function FilingsContent() {
         {tickerParam && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">필터:</span>
-            <span className="text-xs bg-[#FEE500]/30 text-[#191919] px-2 py-0.5 rounded-full font-medium">
+            <span className="text-xs bg-[#B8733A]/30 text-[#2C1810] px-2 py-0.5 rounded-full font-medium">
               {tickerParam.toUpperCase()}
             </span>
             <a href="/filings" className="text-xs text-blue-500 underline">전체 보기</a>
@@ -219,8 +225,11 @@ function FilingsContent() {
               <div key={ticker} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {/* Ticker header */}
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                  <span className="font-semibold text-[15px] text-[#191919]">{ticker}</span>
-                  <span className="text-xs text-gray-400">{tickerFilings.length}건</span>
+                  <div className="flex items-center gap-2.5">
+                    <StockLogo ticker={ticker} logoUrl={logoMap[ticker]} size={28} />
+                    <span className="font-bold text-[15px] text-[#2C1810]">{ticker}</span>
+                  </div>
+                  <span className="text-[12px] text-gray-400">{tickerFilings.length}건</span>
                 </div>
 
                 {/* Filing list */}
@@ -239,7 +248,7 @@ function FilingsContent() {
                               {filing.filingType}
                             </span>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[13px] text-[#191919] leading-snug">{filing.title}</p>
+                              <p className="text-[13px] text-[#2C1810] leading-snug">{filing.title}</p>
                               <p className="text-[11px] text-gray-400 mt-0.5">{filing.filedDate}</p>
                             </div>
                             <a
@@ -298,7 +307,7 @@ function FilingsContent() {
                         {isExpanded && summaries[key] && (
                           <div className="px-4 pb-3">
                             <div className="bg-blue-50/50 border border-blue-100 rounded-xl px-3 py-3">
-                              <p className="text-[12px] text-[#191919] leading-relaxed whitespace-pre-wrap">
+                              <p className="text-[12px] text-[#2C1810] leading-relaxed whitespace-pre-wrap">
                                 {summaries[key]}
                               </p>
                               {summaryMeta[key] && (

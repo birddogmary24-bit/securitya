@@ -7,15 +7,16 @@ import BriefingCard from "@/components/BriefingCard";
 import { DailyBriefing, StockHolding, Persona } from "@/lib/types";
 import { getPortfolio } from "@/lib/portfolio";
 import { getPersona } from "@/lib/persona";
+import { mergeLogos } from "@/lib/logo-cache";
 
 function LoadingSkeleton() {
   return (
     <div className="space-y-4 px-4 pt-4">
-      <div className="skeleton h-6 w-48" />
-      <div className="skeleton h-4 w-full" />
+      <div className="skeleton h-7 w-52" />
+      <div className="skeleton h-5 w-full" />
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="skeleton h-48 w-full rounded-2xl" />
+          <div key={i} className="skeleton h-52 w-full rounded-2xl" />
         ))}
       </div>
     </div>
@@ -28,7 +29,7 @@ function LoadingDots() {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="w-2.5 h-2.5 rounded-full bg-[#FEE500]"
+          className="w-3 h-3 rounded-full bg-[#B8733A]"
           style={{
             animation: `pulse-dot 1.4s infinite ease-in-out`,
             animationDelay: `${i * 0.16}s`,
@@ -43,19 +44,16 @@ function EmptyPortfolio() {
   const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-      <div className="w-16 h-16 rounded-full bg-[#FEE500]/20 flex items-center justify-center mb-4">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FEE500" strokeWidth="2">
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
+      <div className="w-20 h-20 rounded-full bg-[#FFF5EC] flex items-center justify-center mb-4 border border-[#B8733A]/20">
+        <span className="text-3xl">🐶</span>
       </div>
-      <h2 className="text-lg font-semibold text-[#191919] mb-2">관심종목을 등록해주세요</h2>
-      <p className="text-sm text-gray-400 mb-6">
-        관심 종목을 등록하면 맞춤형 AI 브리핑을 받을 수 있어요
+      <h2 className="text-lg font-bold text-[#2C1810] mb-2">관심종목을 등록해주세요!</h2>
+      <p className="text-[14px] text-gray-400 mb-6">
+        종목을 등록하면 메리가 맞춤 브리핑을 해드릴게요
       </p>
       <button
         onClick={() => router.push("/portfolio")}
-        className="bg-[#FEE500] text-[#191919] px-6 py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-transform"
+        className="bg-[#B8733A] text-white px-6 py-3 rounded-xl text-[14px] font-bold active:scale-[0.98] transition-transform shadow-sm"
       >
         종목 등록하기
       </button>
@@ -91,6 +89,12 @@ export default function HomePage() {
         throw new Error(data.error || "브리핑 생성 실패");
       }
       const data: DailyBriefing = await res.json();
+      // 브리핑 응답의 로고 URL을 캐시에 저장
+      const logos: Record<string, string> = {};
+      for (const card of data.cards) {
+        if (card.logoUrl) logos[card.ticker] = card.logoUrl;
+      }
+      if (Object.keys(logos).length > 0) mergeLogos(logos);
       setBriefing(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다");
@@ -115,8 +119,8 @@ export default function HomePage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa]">
-      <Header title="AI 투자비서" />
+    <div className="min-h-screen bg-[#FDF8F3]">
+      <Header title="사냥개 메리" />
 
       {portfolio.length === 0 ? (
         <EmptyPortfolio />
@@ -124,37 +128,37 @@ export default function HomePage() {
         <div className="px-4 py-4 space-y-4">
           {/* Date + source badge */}
           <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-400">{today}</p>
+            <p className="text-[13px] text-gray-400">{today}</p>
             {briefing && (
-              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
                 briefing.source === "gemini"
-                  ? "bg-blue-100 text-blue-600"
+                  ? "bg-[#FFF5EC] text-[#B8733A] border border-[#B8733A]/20"
                   : "bg-gray-100 text-gray-400"
               }`}>
-                {briefing.source === "gemini" ? "✦ Gemini AI" : "⚠ Mock 데이터"}
+                {briefing.source === "gemini" ? "Gemini AI" : "Mock"}
               </span>
             )}
           </div>
 
-          {/* Generated time + data source + cache status */}
+          {/* Generated time + data source */}
           {briefing && (
-            <div className="text-[11px] text-gray-400 space-y-0.5">
-              <p>🕐 생성 시각: {briefing.generatedAt} KST{briefing.cached ? ` (캐시 · ${briefing.cachedAt} 저장)` : ""}</p>
-              <p>📂 데이터 출처: {briefing.source === "gemini" ? `Gemini 2.5 Flash (AI 분석) · ${briefing.dataSource === "supabase" ? "Supabase DB" : "Mock 주가/뉴스"}` : "Mock 데이터 (실시간 미연동)"}</p>
+            <div className="text-[12px] text-gray-400 space-y-0.5">
+              <p>생성: {briefing.generatedAt} KST{briefing.cached ? ` (캐시 · ${briefing.cachedAt})` : ""}</p>
+              <p>출처: {briefing.source === "gemini" ? `Gemini 2.5 Flash · ${briefing.dataSource === "supabase" ? "Supabase DB" : "Mock"}` : "Mock 데이터"}</p>
             </div>
           )}
 
           {loading ? (
             <div className="text-center">
               <LoadingDots />
-              <p className="text-sm text-gray-400">AI가 브리핑을 생성하고 있어요...</p>
+              <p className="text-[14px] text-[#B8733A] font-medium">메리가 브리핑을 준비하고 있어요...</p>
             </div>
           ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-              <p className="text-sm text-red-600 mb-3">{error}</p>
+              <p className="text-[14px] text-red-600 mb-3">{error}</p>
               <button
                 onClick={() => fetchBriefing(portfolio, persona)}
-                className="text-sm font-medium text-red-600 underline"
+                className="text-[14px] font-semibold text-red-600 underline"
               >
                 다시 시도
               </button>
@@ -162,24 +166,29 @@ export default function HomePage() {
           ) : briefing ? (
             <>
               {/* Greeting */}
-              <div className="bg-white rounded-2xl p-4 border border-gray-100">
-                <p className="text-[15px] font-medium text-[#191919] leading-relaxed">
-                  {briefing.greeting}
-                </p>
-                <p className="text-[13px] text-gray-500 mt-2">{briefing.marketOverview}</p>
+              <div className="bg-white rounded-2xl p-5 border border-[#B8733A]/10 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl mt-0.5">🐶</span>
+                  <div>
+                    <p className="text-[16px] font-bold text-[#2C1810] leading-relaxed">
+                      {briefing.greeting}
+                    </p>
+                    <p className="text-[14px] text-gray-500 mt-2 leading-relaxed">{briefing.marketOverview}</p>
+                  </div>
+                </div>
               </div>
 
               {/* Macro Alert */}
               {briefing.macroAlert && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                  <p className="text-[13px] text-amber-700 font-medium">
+                  <p className="text-[14px] text-amber-700 font-semibold">
                     <span className="mr-1">⚠️</span> {briefing.macroAlert}
                   </p>
                 </div>
               )}
 
               {/* Briefing Cards */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {briefing.cards.map((card) => (
                   <BriefingCard key={card.ticker} card={card} />
                 ))}
@@ -189,14 +198,14 @@ export default function HomePage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchBriefing(portfolio, persona)}
-                  className="flex-1 py-2.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                  className="flex-1 py-3 text-[14px] text-gray-400 hover:text-[#B8733A] transition-colors rounded-xl"
                 >
                   브리핑 새로고침
                 </button>
                 {briefing.cached && (
                   <button
                     onClick={() => fetchBriefing(portfolio, persona, true)}
-                    className="py-2.5 px-4 text-sm text-blue-500 hover:text-blue-700 transition-colors font-medium"
+                    className="py-3 px-4 text-[14px] text-[#B8733A] hover:text-[#7A3E1A] transition-colors font-bold rounded-xl"
                   >
                     AI 새로 생성
                   </button>
