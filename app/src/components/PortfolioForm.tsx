@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { StockHolding, POPULAR_STOCKS } from "@/lib/types";
 import { getAllStocks } from "@/lib/stock-tiers";
@@ -13,10 +13,34 @@ export default function PortfolioForm() {
   const [portfolio, setPortfolio] = useState<StockHolding[]>([]);
   const [search, setSearch] = useState("");
   const [saved, setSaved] = useState(false);
+  const [logoMap, setLogoMap] = useState<Record<string, string>>({});
+
+  // 로고 URL 일괄 조회
+  const fetchLogos = useCallback(async (tickers: string[]) => {
+    if (tickers.length === 0) return;
+    try {
+      const res = await fetch(`/api/stocks/logos?tickers=${tickers.join(",")}`);
+      const data = await res.json();
+      if (data.logos) {
+        setLogoMap((prev) => ({ ...prev, ...data.logos }));
+      }
+    } catch {
+      // 로고 로드 실패해도 UI는 정상 동작
+    }
+  }, []);
 
   useEffect(() => {
-    setPortfolio(getPortfolio());
-  }, []);
+    const saved = getPortfolio();
+    setPortfolio(saved);
+
+    // 전체 종목 로고 한번에 조회 (인기 10종목 + 저장된 포트폴리오)
+    const allTickers = [
+      ...POPULAR_STOCKS.map((s) => s.ticker),
+      ...saved.map((s) => s.ticker),
+    ];
+    const unique = [...new Set(allTickers)];
+    fetchLogos(unique);
+  }, [fetchLogos]);
 
   // 검색 시 250종목 전체에서 검색, 미검색 시 인기 10종목 표시
   const allStocksList = getAllStocks().map((s) => ({
@@ -35,7 +59,7 @@ export default function PortfolioForm() {
   );
 
   function addStock(stock: StockHolding) {
-    const updated = [...portfolio, { ...stock, quantity: 1 }];
+    const updated = [...portfolio, { ...stock, quantity: 1, logoUrl: logoMap[stock.ticker] }];
     setPortfolio(updated);
     setSearch("");
   }
@@ -44,14 +68,13 @@ export default function PortfolioForm() {
     setPortfolio(portfolio.filter((h) => h.ticker !== ticker));
   }
 
-  function updateQuantity(ticker: string, qty: number) {
-    setPortfolio(
-      portfolio.map((h) => (h.ticker === ticker ? { ...h, quantity: Math.max(1, qty) } : h))
-    );
-  }
-
   function handleSave() {
-    savePortfolio(portfolio);
+    // 저장 시 logoUrl도 함께 저장
+    const withLogos = portfolio.map((h) => ({
+      ...h,
+      logoUrl: h.logoUrl || logoMap[h.ticker],
+    }));
+    savePortfolio(withLogos);
     if (!hasPersona()) {
       router.push("/persona");
       return;
@@ -77,7 +100,7 @@ export default function PortfolioForm() {
                 className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <StockLogo ticker={holding.ticker} logoUrl={holding.logoUrl} size={36} />
+                  <StockLogo ticker={holding.ticker} logoUrl={holding.logoUrl || logoMap[holding.ticker]} size={36} />
                   <div>
                     <p className="text-sm font-medium text-[#191919]">{holding.nameKr}</p>
                     <p className="text-xs text-gray-400">{holding.ticker}</p>
@@ -116,7 +139,7 @@ export default function PortfolioForm() {
               className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <StockLogo ticker={stock.ticker} size={32} />
+                <StockLogo ticker={stock.ticker} logoUrl={logoMap[stock.ticker]} size={32} />
                 <div>
                   <p className="text-sm text-[#191919]">{stock.nameKr}</p>
                   <p className="text-xs text-gray-400">{stock.ticker}</p>
