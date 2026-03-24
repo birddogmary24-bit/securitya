@@ -33,13 +33,9 @@ export default function PortfolioForm() {
     const saved = getPortfolio();
     setPortfolio(saved);
 
-    // 전체 종목 로고 한번에 조회 (인기 10종목 + 저장된 포트폴리오)
-    const allTickers = [
-      ...POPULAR_STOCKS.map((s) => s.ticker),
-      ...saved.map((s) => s.ticker),
-    ];
-    const unique = [...new Set(allTickers)];
-    fetchLogos(unique);
+    // 전체 250종목 로고 한번에 조회
+    const allTickers = getAllStocks().map((s) => s.ticker);
+    fetchLogos(allTickers);
   }, [fetchLogos]);
 
   // 검색 시 250종목 전체에서 검색, 미검색 시 인기 10종목 표시
@@ -102,13 +98,13 @@ export default function PortfolioForm() {
                 <div className="flex items-center gap-3">
                   <StockLogo ticker={holding.ticker} logoUrl={holding.logoUrl || logoMap[holding.ticker]} size={36} />
                   <div>
-                    <p className="text-sm font-medium text-[#191919]">{holding.nameKr}</p>
-                    <p className="text-xs text-gray-400">{holding.ticker}</p>
+                    <p className="text-sm font-bold text-[#191919]">{holding.nameKr}</p>
+                    <p className="text-xs text-[#191919]">{holding.ticker}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => removeStock(holding.ticker)}
-                  className="text-gray-300 hover:text-red-400 transition-colors"
+                  className="text-gray-500 hover:text-red-500 transition-colors"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18" />
