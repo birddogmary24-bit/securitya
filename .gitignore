@@ -29,3 +29,7 @@ yarn-error.log*
 
 # Vercel
 .vercel
+
+# Supabase CLI temp files
+supabase/.temp/
+app/supabase/
