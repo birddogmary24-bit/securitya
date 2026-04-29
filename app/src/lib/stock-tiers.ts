@@ -719,9 +719,9 @@ export function getTierForTicker(ticker: string): 1 | 2 | 3 | null {
   return stock ? stock.tier : null;
 }
 
-/** Tier 1+2 개별주식만 반환 (AI 분석 대상) */
+/** Tier 1 개별주식만 반환 (AI 분석 대상 - 비용 절감을 위해 Tier 1로 축소) */
 export function getAnalysisTargetStocks(): TieredStock[] {
-  return [...TIER1_STOCKS, ...TIER2_STOCKS].filter(s => !s.isEtf);
+  return TIER1_STOCKS.filter(s => !s.isEtf);
 }
 
 /** 전체 수집 대상 (Tier 1 + 2, 6종 API) — ETF 제외 */

@@ -14,9 +14,9 @@ import { getAnalysisTargetStocks } from "../src/lib/stock-tiers";
 import { supabase } from "../src/lib/supabase";
 import crypto from "crypto";
 
-const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
-const BATCH_SIZE = 2;    // 동시 Gemini 호출 수 (무료 Tier 10 RPM 대응)
-const DELAY_MS = 13000;  // 배치 간 딜레이 (2req/13sec ≈ 9.2 RPM)
+const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
+const BATCH_SIZE = 5;    // 동시 Gemini 호출 수 (1.5 Flash는 RPM 여유로움)
+const DELAY_MS = 5000;   // 배치 간 딜레이 (1.5 Flash 대응)
 
 function todayKST(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
