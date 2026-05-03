@@ -1,8 +1,8 @@
 /**
  * 종목별 AI 분석 사전 생성 스크립트 (GitHub Actions에서 Finnhub 수집 후 실행)
  *
- * - Tier 1+2 개별주식 (약 150개) 대상
- * - Gemini 2.5 Flash로 종목별 분석 생성
+ * - Tier 1 개별주식 (약 50개) 대상
+ * - Gemini 1.5 Flash로 종목별 분석 생성
  * - stock_analysis_cache 테이블에 저장
  * - market_overview_cache에 시장 전체 분석 저장
  *
@@ -14,7 +14,7 @@ import { getAnalysisTargetStocks } from "../src/lib/stock-tiers";
 import { supabase } from "../src/lib/supabase";
 import crypto from "crypto";
 
-const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
+const GEMINI_MODELS = ["gemini-1.5-flash"];
 const BATCH_SIZE = 5;    // 동시 Gemini 호출 수 (1.5 Flash는 RPM 여유로움)
 const DELAY_MS = 5000;   // 배치 간 딜레이 (1.5 Flash 대응)
 
@@ -235,7 +235,7 @@ async function main() {
   const stocks = getAnalysisTargetStocks();
 
   console.log(`=== 종목별 AI 분석 생성 시작: ${today} ===`);
-  console.log(`대상: ${stocks.length}종목 (Tier 1+2 개별주식)`);
+  console.log(`대상: ${stocks.length}종목 (Tier 1 개별주식)`);
 
   // 1. 시장 전체 분석 생성
   try {
